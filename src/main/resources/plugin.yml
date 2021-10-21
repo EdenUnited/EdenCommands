@@ -1,0 +1,5 @@
+name: '${project.name}'
+version: '${project.version}'
+main: at.haha007.edencommands.EdenCommands
+api-version: 1.17
+authors: [ Haha007 ]
