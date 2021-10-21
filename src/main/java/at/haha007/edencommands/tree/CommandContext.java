@@ -5,8 +5,8 @@ import lombok.Setter;
 import org.bukkit.command.CommandSender;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 public class CommandContext {
     @Setter
@@ -17,7 +17,7 @@ public class CommandContext {
     private CommandSender sender;
     @Setter
     @Getter
-    private Stack<String> remainingCommandStack;
+    private List<String> remainingCommand;
 
     private final Map<String, Object> parameters = new HashMap<>();
 

@@ -3,10 +3,7 @@ package at.haha007.edencommands.tree.node;
 import at.haha007.edencommands.tree.CommandContext;
 import org.bukkit.permissions.Permission;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -61,21 +58,24 @@ public abstract class CommandNode {
         if (command.isEmpty() || context.isWasExecuted()) return;
         String element = command.pop();
 
-        //if it doesn't match any completions for this element return an empty list
+        //if it doesn't match don't do anything
         if (!matches(element)) return;
-
-        //if this is the last element return the tab completions for this element
-        if (command.isEmpty()) {
-            if (executor == null) return;
-            if (permission != null && !context.getSender().hasPermission(permission))
-                return;
-            context.setWasExecuted(true);
-            context.setRemainingCommandStack(command);
-            executor.accept(context);
-        }
 
         //recursion
         children.forEach(c -> c.execute((Stack<String>) command.clone(), context));
+
+        //if no child was executed, execute this node
+        if (context.isWasExecuted()) return;
+
+        if (executor == null) return;
+        if (permission != null && !context.getSender().hasPermission(permission))
+            return;
+
+        context.setWasExecuted(true);
+        List<String> remaining = new ArrayList<>(command);
+        Collections.reverse(remaining);
+        context.setRemainingCommand(remaining);
+        executor.accept(context);
     }
 
     abstract protected boolean matches(String s);

@@ -6,8 +6,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
 
@@ -24,7 +22,9 @@ public class NodeCommand extends Command {
         CommandContext context = new CommandContext();
         context.setSender(sender);
         Stack<String> stack = new Stack<>();
-        Arrays.stream(args).sorted(Comparator.reverseOrder()).forEach(stack::push);
+        for (int i = args.length - 1; i >= 0; i--) {
+            stack.push(args[i]);
+        }
         stack.push(root.getLiteral());
         root.execute(stack, context);
         return context.isWasExecuted();
@@ -34,7 +34,9 @@ public class NodeCommand extends Command {
         CommandContext context = new CommandContext();
         context.setSender(sender);
         Stack<String> stack = new Stack<>();
-        Arrays.stream(args).sorted(Comparator.reverseOrder()).forEach(stack::push);
+        for (int i = args.length - 1; i >= 0; i--) {
+            stack.push(args[i]);
+        }
         stack.push(root.getLiteral());
         return root.tabComplete(stack, context);
     }

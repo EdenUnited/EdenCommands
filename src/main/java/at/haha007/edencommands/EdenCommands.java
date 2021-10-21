@@ -39,20 +39,8 @@ public final class EdenCommands extends JavaPlugin implements Listener {
     }
 
     @Command("sub")
-    private final TestClass sub = new TestClass();
-
-    @Command("myCommand")
-    private void myCommand(CommandContext context) {
-        context.getSender().sendMessage("name: " + context.getSender().getName());
-    }
-
-    @Command("meow")
-    private void meow(CommandContext context) {
-        context.getSender().sendMessage("name: " + context.getSender().getName());
-    }
-
-    private static class TestClass {
-        @Command(value = "b")
+    private final Object sub = new Object() {
+        @Command("b")
         void b(CommandContext context) {
             context.getSender().sendMessage("b");
         }
@@ -61,5 +49,15 @@ public final class EdenCommands extends JavaPlugin implements Listener {
         void c(CommandContext context) {
             context.getSender().sendMessage(context.getParameter("c", Integer.class).toString());
         }
+    };
+
+    @Command("myCommand")
+    private void myCommand(CommandContext context) {
+        context.getSender().sendMessage("name: " + String.join(" ", context.getRemainingCommand()));
+    }
+
+    @Command("meow")
+    private void meow(CommandContext context) {
+        context.getSender().sendMessage("name: " + context.getSender().getName());
     }
 }
