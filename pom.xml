@@ -7,7 +7,7 @@
     <groupId>at.haha007</groupId>
     <artifactId>edencommands</artifactId>
     <version>1.0</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <name>EdenCommands</name>
 
