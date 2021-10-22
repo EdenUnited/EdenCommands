@@ -5,6 +5,7 @@ import at.haha007.edencommands.tree.node.CommandNode;
 import at.haha007.edencommands.tree.node.LiteralCommandNode;
 import at.haha007.edencommands.tree.node.NodeCommand;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -17,9 +18,9 @@ public class CommandRegistry {
     private static final Set<NodeCommand> registeredCommands = new HashSet<>();
 
     public static void register(CommandNode node) {
-        if (!(node instanceof LiteralCommandNode literal))
+        if (!(node instanceof LiteralCommandNode))
             throw new UnsupportedOperationException("CommandNode needs to be a LiteralCommandNode");
-        NodeCommand command = new NodeCommand(literal);
+        NodeCommand command = new NodeCommand((LiteralCommandNode) node);
         registeredCommands.add(command);
     }
 
@@ -29,9 +30,9 @@ public class CommandRegistry {
             try {
                 CommandNode node = createNode(field, object);
                 if (node == null) continue;
-                if(! (node instanceof LiteralCommandNode)) {
-                    EdenCommands.getEdenCommands().getLogger().severe("Cannot create command: Root node must be a LiteralCommandNode");
-                    EdenCommands.getEdenCommands().getLogger().severe(object.getClass().getSimpleName() + " - " + field.getName());
+                if (!(node instanceof LiteralCommandNode)) {
+                    Bukkit.getLogger().severe("Cannot create command: Root node must be a LiteralCommandNode");
+                    Bukkit.getLogger().severe(object.getClass().getSimpleName() + " - " + field.getName());
                     continue;
                 }
                 CommandRegistry.register(node);
@@ -43,9 +44,9 @@ public class CommandRegistry {
             try {
                 CommandNode node = createNode(method, object);
                 if (node == null) continue;
-                if(! (node instanceof LiteralCommandNode)) {
-                    EdenCommands.getEdenCommands().getLogger().severe("Cannot create command: Root node must be a LiteralCommandNode");
-                    EdenCommands.getEdenCommands().getLogger().severe(object.getClass().getSimpleName() + " - " + method.getName());
+                if (!(node instanceof LiteralCommandNode)) {
+                    Bukkit.getLogger().severe("Cannot create command: Root node must be a LiteralCommandNode");
+                    Bukkit.getLogger().severe(object.getClass().getSimpleName() + " - " + method.getName());
                     continue;
                 }
                 CommandRegistry.register(node);
