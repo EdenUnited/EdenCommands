@@ -18,9 +18,9 @@ public class CommandRegistry {
     private static final Set<NodeCommand> registeredCommands = new HashSet<>();
 
     public static void register(CommandNode node) {
-        if (!(node instanceof LiteralCommandNode))
+        if (!(node instanceof LiteralCommandNode literal))
             throw new UnsupportedOperationException("CommandNode needs to be a LiteralCommandNode");
-        NodeCommand command = new NodeCommand((LiteralCommandNode) node);
+        NodeCommand command = new NodeCommand(literal);
         registeredCommands.add(command);
     }
 
