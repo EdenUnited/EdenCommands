@@ -18,6 +18,9 @@ public class CommandContext {
     @Setter
     @Getter
     private List<String> remainingCommand;
+    @Setter
+    @Getter
+    private boolean permissionFailed = false;
 
     private final Map<String, Object> parameters = new HashMap<>();
 

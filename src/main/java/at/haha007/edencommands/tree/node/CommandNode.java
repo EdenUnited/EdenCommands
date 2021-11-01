@@ -43,6 +43,9 @@ public abstract class CommandNode {
         //if it doesn't match any completions for this element return an empty list
         if (!matches(element)) return List.of();
 
+        if (permission != null && !context.getSender().hasPermission(permission))
+            return List.of();
+
         //if this is the last element return the tab completions for this element
         if (command.isEmpty()) return tabCompleter == null ? List.of() : tabCompleter.apply(context);
 
@@ -61,6 +64,11 @@ public abstract class CommandNode {
         //if it doesn't match don't do anything
         if (!matches(element)) return;
 
+        if (permission != null && !context.getSender().hasPermission(permission)) {
+            context.setPermissionFailed(true);
+            return;
+        }
+
         //recursion
         children.forEach(c -> c.execute((Stack<String>) command.clone(), context));
 
@@ -68,8 +76,6 @@ public abstract class CommandNode {
         if (context.isWasExecuted()) return;
 
         if (executor == null) return;
-        if (permission != null && !context.getSender().hasPermission(permission))
-            return;
 
         context.setWasExecuted(true);
         List<String> remaining = new ArrayList<>(command);

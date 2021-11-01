@@ -27,6 +27,10 @@ public class NodeCommand extends Command {
         }
         stack.push(root.getLiteral());
         root.execute(stack, context);
+        if (!context.isWasExecuted() && context.isPermissionFailed()) {
+            sender.sendMessage(Bukkit.getPermissionMessage());
+            return true;
+        }
         return context.isWasExecuted();
     }
 
