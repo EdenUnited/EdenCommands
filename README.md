@@ -1,9 +1,9 @@
-#EdenCommands
+# EdenCommands
 A command library to register Commands in a tree-style fashion.
 
-##Usage
+## Usage
 
-###Nodes
+### Nodes
 CommandNodes are a tree based system  
 there are 2 basic variations of CommandNodes, the LiteralCommandNode and the ArgumentCommandNode  
 The root node has to be a `LiteralCommandNode`
@@ -39,7 +39,7 @@ class MyClass {
 }
 ```
 
-###Annotations
+### Annotations
 Register the root object via ``CommandRegistry.register(object)``
 
 ```java
@@ -70,7 +70,7 @@ class MyClass {
 ```
 
 
-##Maven
+## Maven
 ```xml
 <repository>
     <id>jitpack</id>
@@ -85,7 +85,7 @@ class MyClass {
 </dependency>
 ```
 
-##Gradle
+## Gradle
 ```
 repositories {
     maven { url 'https://jitpack.io' }
@@ -97,6 +97,6 @@ dependencies {
 }
 ```
 
-##Version
+## Version
 
 [![](https://jitpack.io/v/HahaOO7/EdenCommands.svg)](https://jitpack.io/#HahaOO7/EdenCommands)
