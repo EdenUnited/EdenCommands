@@ -4,9 +4,9 @@ A command library to register Commands in a tree-style fashion.
 ## Usage
 
 ### Nodes
-CommandNodes are a tree based system  
-there are 2 basic variations of CommandNodes, the LiteralCommandNode and the ArgumentCommandNode  
-The root node has to be a `LiteralCommandNode`
+CommandNodes are a tree based system.  
+There are 2 basic variations of CommandNodes, the LiteralCommandNode and the ArgumentCommandNode.  
+The root node has to be a `LiteralCommandNode`.
 
 ```java
 class MyClass {
@@ -40,7 +40,7 @@ class MyClass {
 ```
 
 ### Annotations
-Register the root object via ``CommandRegistry.register(object)``
+Register the root object via ``CommandRegistry.register(object)``.
 
 ```java
 class MyClass {
