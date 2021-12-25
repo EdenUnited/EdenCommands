@@ -10,5 +10,11 @@ import java.lang.annotation.Target;
 public @interface Command {
     String value();
 
+    //the permission to use this command, or no permission if empty
+    String permission() default "";
+
+    //not suitable for LiteralCommandNode, intended for use with ArgumentCommandNode
+    String tabCompletes() default "";
+
     EnumCommandType type() default EnumCommandType.LITERAL;
 }
