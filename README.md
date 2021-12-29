@@ -99,4 +99,4 @@ dependencies {
 
 ## Version
 
-[![](https://jitpack.io/v/HahaOO7/EdenCommands.svg)](https://jitpack.io/#HahaOO7/EdenCommands)
+[![](https://jitpack.io/v/EdenUnited/EdenCommands.svg)](https://jitpack.io/#EdenUnited/EdenCommands)
