@@ -79,7 +79,7 @@ class MyClass {
 ```
 ```xml
 <dependency>
-    <groupId>com.github.HahaOO7</groupId>
+    <groupId>com.github.EdenUnited</groupId>
     <artifactId>EdenCommands</artifactId>
     <version>version</version>
 </dependency>
@@ -93,10 +93,10 @@ repositories {
 ```
 ```
 dependencies {
-    implementation 'com.github.HahaOO7:EdenCommands:version'
+    implementation 'com.github.EdenUnited:EdenCommands:version'
 }
 ```
 
 ## Version
 
-[![](https://jitpack.io/v/HahaOO7/EdenCommands.svg)](https://jitpack.io/#HahaOO7/EdenCommands)
+[![](https://jitpack.io/v/EdenUnited/EdenCommands.svg)](https://jitpack.io/#EdenUnited/EdenCommands)
