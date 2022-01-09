@@ -41,7 +41,7 @@ public abstract class CommandNode {
         String element = command.pop();
 
         //if it doesn't match any completions for this element return an empty list
-        if (!matches(element)) return List.of();
+        if (!startsWith(element)) return List.of();
 
         if (permission != null && !context.getSender().hasPermission(permission))
             return List.of();
@@ -86,4 +86,5 @@ public abstract class CommandNode {
 
     abstract protected boolean matches(String s);
 
+    abstract protected boolean startsWith(String s);
 }

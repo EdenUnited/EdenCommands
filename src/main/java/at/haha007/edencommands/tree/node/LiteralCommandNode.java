@@ -18,8 +18,11 @@ public class LiteralCommandNode extends CommandNode {
         return new LiteralCommandNode(literal);
     }
 
-    @Override
     protected boolean matches(String s) {
-        return literal.toLowerCase().equalsIgnoreCase(s.toLowerCase());
+        return literal.equalsIgnoreCase(s);
+    }
+
+    protected boolean startsWith(String s) {
+        return literal.toLowerCase().startsWith(s.toLowerCase());
     }
 }

@@ -27,4 +27,8 @@ public class ArgumentCommandNode<T> extends CommandNode {
     protected boolean matches(String s) {
         return argumentParser.parse(s) != null;
     }
+
+    protected boolean startsWith(String s) {
+        return matches(s);
+    }
 }
