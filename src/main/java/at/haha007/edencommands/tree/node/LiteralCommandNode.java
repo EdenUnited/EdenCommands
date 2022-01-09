@@ -20,6 +20,6 @@ public class LiteralCommandNode extends CommandNode {
 
     @Override
     protected boolean matches(String s) {
-        return literal.toLowerCase().startsWith(s.toLowerCase());
+        return literal.toLowerCase().equalsIgnoreCase(s.toLowerCase());
     }
 }
