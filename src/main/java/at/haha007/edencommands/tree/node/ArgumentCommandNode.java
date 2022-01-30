@@ -29,6 +29,6 @@ public class ArgumentCommandNode<T> extends CommandNode {
     }
 
     protected boolean startsWith(String s) {
-        return matches(s);
+        return true;
     }
 }
