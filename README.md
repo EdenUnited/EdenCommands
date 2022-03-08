@@ -31,13 +31,53 @@ class MyClass {
         CommandNode node = LiteralCommandNode.literal("mycommand");
         CommandNode argument = ArgumentCommandNode("key", IntegerArgumentParser.intParser(0, 10));
         argument.executes(context -> {
-            int number = context.getParameter("key", Integer.class);
-            context.getSender().sendMessage(number);
+            Integer number = context.getParameter("key", Integer.class);
+            context.getSender().sendMessage(number.toString());
         });
         node.then(argument);
     }
 }
 ```
+
+### Brigadier
+Register the root object via ``BrigadierCommandRegistry.register(object)``.
+
+```java
+class MyPlugin extends JavaPlugin {
+    public void onEnable() {
+        BrigadierCommandRegistry registry = new BrigadierCommandRegistry(this);
+
+        //creating a command node
+        LiteralArgumentBuilder<Player> command = registry.literal("mycommand");
+        command.executes(cmd -> 1);
+        command.requires(p -> p.hasPermission("myplugin.mycommand"));
+
+        //adding a subcommand -> /mycommand subcommand
+        LiteralArgumentBuilder<Player> subcommand = registry.literal("subcommand");
+        command.then(subcommand);
+
+        //register it
+        registry.register(node);
+    }
+}
+```
+
+```java
+class MyPlugin extends JavaPlugin {
+    public void onEnable() {
+        BrigadierCommandRegistry registry = new BrigadierCommandRegistry(this);
+        LiteralArgumentBuilder<Player> node = registry.literal("mycommand");
+        RequiredArgumentBuilder<Player, Integer> argument = registry.argument("key", IntegerArgumentType.integer(0, 10));
+        argument.executes(cmd -> {
+            Integer number = cmd.getArgument("key", Integer.class);
+            cmd.getSource().sendMessage(number.toString());
+            return 1;
+        });
+        node.then(argument);
+    }
+}
+```
+
 
 ### Annotations
 Register the root object via ``CommandRegistry.register(object)``.
