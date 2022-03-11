@@ -15,7 +15,8 @@ public class NodeCommand extends Command {
     public NodeCommand(LiteralCommandNode root) {
         super(root.getLiteral());
         this.root = root;
-        Bukkit.getCommandMap().register("EdenCommands", this);
+        Bukkit.getCommandMap().register("edencommands", this);
+        Bukkit.getCommandMap().getKnownCommands().remove("edencommands:" + root.getLiteral());
     }
 
     public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {

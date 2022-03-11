@@ -46,8 +46,6 @@ public class BrigadierCommandRegistry {
                 String text = packet.getStrings().read(0);
                 if (text.charAt(0) != '/')
                     return;
-                if (text.startsWith("/edencommands:"))
-                    text = text.replaceFirst("/edencommands:", "/");
                 text = text.substring(1);
                 ParseResults<Player> parseResults = dispatcher.parse(text, event.getPlayer());
                 CompletableFuture<Suggestions> futureSuggestions = dispatcher.getCompletionSuggestions(parseResults);
@@ -66,8 +64,6 @@ public class BrigadierCommandRegistry {
                 String text = packet.getStrings().read(0);
                 if (text.charAt(0) != '/')
                     return;
-                if (text.startsWith("/edencommands:"))
-                    text = text.replaceFirst("/edencommands:", "/");
                 text = text.substring(1);
                 try {
                     dispatcher.execute(text, event.getPlayer());
@@ -95,6 +91,7 @@ public class BrigadierCommandRegistry {
         };
         command.setPermission("edencommands." + commandNode.getLiteral());
         Bukkit.getCommandMap().register("edencommands", command);
+        Bukkit.getCommandMap().getKnownCommands().remove("edencommands:" + commandNode.getLiteral());
     }
 
     private boolean tabComplete(Player player, Suggestions suggestions, int transactionId) {
