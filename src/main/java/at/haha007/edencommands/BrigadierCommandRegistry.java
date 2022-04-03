@@ -16,6 +16,7 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -65,10 +66,18 @@ public class BrigadierCommandRegistry {
                 if (text.charAt(0) != '/')
                     return;
                 text = text.substring(1);
+                String cmd = text.split("\s")[0];
                 try {
                     dispatcher.execute(text, event.getPlayer());
                 } catch (CommandSyntaxException e) {
-                    event.getPlayer().sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+                    boolean isCommandPresent = dispatcher.getRoot().getChildren()
+                            .stream()
+                            .filter(c -> c instanceof LiteralCommandNode<Player>)
+                            .map(c -> (LiteralCommandNode<Player>) c)
+                            .anyMatch(c -> c.getLiteral().equalsIgnoreCase(cmd));
+                    if(isCommandPresent){
+                        event.getPlayer().sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+                    }
                 }
             }
         };
