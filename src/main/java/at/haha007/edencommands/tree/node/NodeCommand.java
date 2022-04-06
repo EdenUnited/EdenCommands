@@ -17,6 +17,7 @@ public class NodeCommand extends Command {
         super(root.getLiteral());
         this.root = root;
         Bukkit.getCommandMap().register("edencommands", this);
+        setPermission("edencommands." + root.getPermission());
         Bukkit.getCommandMap().getKnownCommands().remove("edencommands:" + root.getLiteral());
     }
 
