@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Stack;
@@ -17,6 +18,10 @@ public class NodeCommand extends Command {
         this.root = root;
         Bukkit.getCommandMap().register("edencommands", this);
         Bukkit.getCommandMap().getKnownCommands().remove("edencommands:" + root.getLiteral());
+    }
+
+    public @Nullable String getPermission() {
+        return "edencommands." + root.getPermission();
     }
 
     public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {

@@ -84,6 +84,10 @@ public abstract class CommandNode {
         executor.accept(context);
     }
 
+    public Permission getPermission() {
+        return permission;
+    }
+
     abstract protected boolean matches(String s);
 
     abstract protected boolean startsWith(String s);
