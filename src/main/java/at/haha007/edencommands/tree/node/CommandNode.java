@@ -20,6 +20,11 @@ public abstract class CommandNode {
         return this;
     }
 
+    public CommandNode executesAsync(Consumer<CommandContext> executor) {
+        this.executor = context -> new Thread(() -> executor.accept(context)).start();
+        return this;
+    }
+
     public CommandNode withPermission(String permission) {
         this.permission = new Permission(permission);
         return this;
