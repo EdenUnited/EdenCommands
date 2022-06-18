@@ -26,7 +26,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -59,13 +58,10 @@ public class BrigadierCommandRegistry {
             }
         };
 
-        chatListener = new PacketAdapter(plugin, PacketType.Play.Client.CHAT) {
+        chatListener = new PacketAdapter(plugin, PacketType.Play.Client.CHAT_COMMAND) {
             public void onPacketReceiving(PacketEvent event) {
                 PacketContainer packet = event.getPacket();
                 String text = packet.getStrings().read(0);
-                if (text.charAt(0) != '/')
-                    return;
-                text = text.substring(1);
                 String cmd = text.split("\s")[0];
                 try {
                     dispatcher.execute(text, event.getPlayer());
@@ -75,7 +71,7 @@ public class BrigadierCommandRegistry {
                             .filter(c -> c instanceof LiteralCommandNode<Player>)
                             .map(c -> (LiteralCommandNode<Player>) c)
                             .anyMatch(c -> c.getLiteral().equalsIgnoreCase(cmd));
-                    if(isCommandPresent){
+                    if (isCommandPresent) {
                         event.getPlayer().sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
                     }
                 }
@@ -112,11 +108,7 @@ public class BrigadierCommandRegistry {
         packet.getIntegers().write(0, transactionId);
         packet.getModifier().write(1, suggestions);
 
-        try {
-            pm.sendServerPacket(player, packet);
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        pm.sendServerPacket(player, packet);
         return true;
     }
 
