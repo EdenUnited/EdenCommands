@@ -1,4 +1,4 @@
-package at.haha007.edencommands;
+package at.haha007.edencommands.brigadier;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
