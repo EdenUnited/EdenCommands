@@ -11,6 +11,15 @@ import java.util.Iterator;
 public enum StringArgument {
     ;
 
+    public static Argument<String> word() {
+        return new Argument<>() {
+            @NotNull
+            public ParsedArgument<String> parse(CommandContext context) {
+                return new ParsedArgument<>(context.input()[context.pointer()], 1);
+            }
+        };
+    }
+
     public static Argument<String> quotedString(Component error) {
         return new Argument<>() {
             @NotNull
@@ -39,17 +48,14 @@ public enum StringArgument {
                     amount++;
                 }
 
+                if(sb.length() == 0)
+                    throw new CommandException(error, context);
+
+                if(sb.charAt(sb.length() - 1) != '\"')
+                    throw new CommandException(error, context);
+
                 sb.deleteCharAt(sb.length() - 1);
                 return new ParsedArgument<>(sb.toString(), amount);
-            }
-        };
-    }
-
-    public static Argument<String> word() {
-        return new Argument<>() {
-            @NotNull
-            public ParsedArgument<String> parse(CommandContext context) throws CommandException {
-                return new ParsedArgument<>(context.input()[context.pointer()], 1);
             }
         };
     }
@@ -57,7 +63,7 @@ public enum StringArgument {
     public static Argument<String> greedy() {
         return new Argument<>() {
             @NotNull
-            public ParsedArgument<String> parse(CommandContext context) throws CommandException {
+            public ParsedArgument<String> parse(CommandContext context) {
                 int start = context.pointer();
                 String[] input = context.input();
                 input = Arrays.copyOfRange(input, start, input.length);

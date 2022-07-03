@@ -17,8 +17,10 @@ import java.util.Map;
 
 public class CommandRegistry implements Listener {
     private final Map<String, NodeCommand> registeredCommands = new HashMap<>();
+    private final Plugin plugin;
 
     public CommandRegistry(Plugin plugin) {
+        this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -36,7 +38,7 @@ public class CommandRegistry implements Listener {
         if (!buffer.startsWith("/"))
             return;
 
-        String[] args = buffer.substring(1).split("\\W+");
+        String[] args = buffer.substring(1).split("\\s+");
         if (buffer.endsWith(" ")) {
             String[] a = new String[args.length + 1];
             System.arraycopy(args, 0, a, 0, args.length);
@@ -62,7 +64,7 @@ public class CommandRegistry implements Listener {
     }
 
 
-    private static class NodeCommand extends Command {
+    private class NodeCommand extends Command {
         private final LiteralCommandNode rootNode;
 
         private NodeCommand(LiteralCommandNode node) {
@@ -74,10 +76,13 @@ public class CommandRegistry implements Listener {
             String[] input = new String[args.length + 1];
             input[0] = label;
             System.arraycopy(args, 0, input, 1, args.length);
-            return rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>()));
+            Bukkit.getScheduler().runTaskAsynchronously(plugin,
+                    () -> rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>())));
+            return true;
         }
 
-        public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
+        public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args)
+                throws IllegalArgumentException {
             return List.of();
         }
 
