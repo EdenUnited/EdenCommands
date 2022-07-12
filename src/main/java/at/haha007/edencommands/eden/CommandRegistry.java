@@ -5,7 +5,9 @@ import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -14,8 +16,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class CommandRegistry implements Listener {
+
     private final Map<String, NodeCommand> registeredCommands = new HashMap<>();
     private final Plugin plugin;
 
@@ -24,12 +28,21 @@ public class CommandRegistry implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
+    public void destroy() {
+        registeredCommands.values().forEach(c -> Bukkit.getCommandMap().getKnownCommands().values().remove(c));
+        registeredCommands.clear();
+        HandlerList.unregisterAll(this);
+    }
+
     public void register(LiteralCommandNode node) {
         String literal = node.literal().toLowerCase();
+        if (registeredCommands.containsKey(literal)) {
+            registeredCommands.get(literal).rootNode.merge(node);
+            return;
+        }
         NodeCommand command = new NodeCommand(node);
         registeredCommands.put(literal.toLowerCase(), command);
-        Bukkit.getCommandMap().register(literal, command);
-        Bukkit.getCommandMap().getKnownCommands().remove(literal + ":" + literal);
+        Bukkit.getCommandMap().register(plugin.getName(), command);
     }
 
     @EventHandler
@@ -55,12 +68,16 @@ public class CommandRegistry implements Listener {
         event.setCompletions(completions);
     }
 
-    public LiteralCommandNode literal(String key) {
+    public static LiteralCommandNode literal(String key) {
         return new LiteralCommandNode(key);
     }
 
-    public <T> ArgumentCommandNode<T> argument(String key, Argument<T> argument) {
+    public static <T> ArgumentCommandNode<T> argument(String key, Argument<T> argument) {
         return new ArgumentCommandNode<>(key, argument);
+    }
+
+    public static Predicate<Player> permission(String permission) {
+        return p -> p.hasPermission(permission);
     }
 
 

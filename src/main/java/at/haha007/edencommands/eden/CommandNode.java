@@ -8,22 +8,23 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 @Accessors(fluent = true)
 @EqualsAndHashCode
 abstract class CommandNode<T extends CommandNode<T>> {
+    private static final CommandExecutor defaultExecutor = c -> {
+    };
+
     @Getter
-    private final Map<String, CommandNode<?>> children = new LinkedHashMap<>();
+    private final List<CommandNode<?>> children = new ArrayList<>();
 
     @Getter
     @NotNull
-    private CommandExecutor executor = c -> {
-    };
+    private CommandExecutor executor = defaultExecutor;
 
     @Getter
     private Predicate<CommandSender> requirement;
@@ -34,7 +35,7 @@ abstract class CommandNode<T extends CommandNode<T>> {
 
     @NotNull
     public T then(@NotNull CommandNode<?> child) {
-        children.put(child.name(), child);
+        children.add(child);
         return getThis();
     }
 
@@ -62,6 +63,8 @@ abstract class CommandNode<T extends CommandNode<T>> {
     protected abstract T getThis();
 
     boolean execute(InternalContext context) {
+        if (!canUse(context.sender()))
+            return false;
         if (!context.hasNext()) {
             try {
                 executor.execute(context.context());
@@ -74,7 +77,7 @@ abstract class CommandNode<T extends CommandNode<T>> {
                 return sendUsageText(context.sender());
             }
         }
-        for (CommandNode<?> child : children.values()) {
+        for (CommandNode<?> child : children) {
             if (child.execute(context.next()))
                 return true;
         }
@@ -83,7 +86,7 @@ abstract class CommandNode<T extends CommandNode<T>> {
 
     List<String> tabComplete(InternalContext context) {
         if (context.hasNext())
-            return children.values().stream()
+            return children.stream()
                     .map(c -> c.tabComplete(context.next()))
                     .filter(Objects::nonNull)
                     .flatMap(List::stream)
@@ -95,5 +98,15 @@ abstract class CommandNode<T extends CommandNode<T>> {
         if (usageText == null) return false;
         sender.sendMessage(usageText);
         return true;
+    }
+
+    void merge(CommandNode<T> node) {
+        if (executor == defaultExecutor)
+            executor = node.executor;
+        if (requirement == null)
+            requirement = node.requirement;
+        if (usageText == null)
+            usageText = node.usageText;
+        children.addAll(node.children);
     }
 }

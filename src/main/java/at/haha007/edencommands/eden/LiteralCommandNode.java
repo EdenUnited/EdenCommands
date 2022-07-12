@@ -23,6 +23,8 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
     }
 
     List<String> tabComplete(InternalContext context) {
+        if (!canUse(context.sender()))
+            return List.of();
         if (context.hasNext() && literal.equalsIgnoreCase(context.current())) {
             return super.tabComplete(context);
         }
