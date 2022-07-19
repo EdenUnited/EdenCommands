@@ -53,17 +53,19 @@ abstract class CommandNode<T extends CommandNode<T>> {
     @NotNull
     abstract public String name();
 
-    public boolean canUse(@NotNull CommandSender sender) {
+    //api end, internal start
+
+    protected boolean testRequirement(@NotNull CommandSender sender) {
+        if (requirement == null)
+            return true;
         return requirement.test(sender);
     }
-
-    //api end, internal start
 
     @NotNull
     protected abstract T getThis();
 
     boolean execute(InternalContext context) {
-        if (!canUse(context.sender()))
+        if (!testRequirement(context.sender()))
             return false;
         if (!context.hasNext()) {
             try {

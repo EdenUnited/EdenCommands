@@ -23,15 +23,11 @@ public class CommandContext {
     private final int pointer;
 
     @SuppressWarnings("unchecked")
-    public <T> T parameter(String key, Class<T> clazz) {
+    public <T> T parameter(String key) {
         Object argument = parsedParameters.get(key);
         if (argument == null) {
             throw new IllegalArgumentException("There is no argument with this key: '" + key + "'");
         }
-        if (!clazz.isAssignableFrom(argument.getClass())) {
-            throw new IllegalArgumentException("The argument '" + key + "' is of type " + argument.getClass().getSimpleName() + ", not " + clazz.getSimpleName());
-        }
-
         return (T) argument;
     }
 }

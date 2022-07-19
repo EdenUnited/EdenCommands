@@ -25,7 +25,7 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
     }
 
     List<String> tabComplete(InternalContext context) {
-        if (!canUse(context.sender()))
+        if (!testRequirement(context.sender()))
             return List.of();
         try {
             ParsedArgument<T> parse = argument.parse(context.context());
@@ -40,7 +40,7 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
     }
 
     boolean execute(InternalContext context) {
-        if (!canUse(context.sender()))
+        if (!testRequirement(context.sender()))
             return false;
         try {
             ParsedArgument<T> parse = argument.parse(context.context());

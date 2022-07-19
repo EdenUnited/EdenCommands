@@ -5,7 +5,6 @@ import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -76,10 +75,15 @@ public class CommandRegistry implements Listener {
         return new ArgumentCommandNode<>(key, argument);
     }
 
-    public static Predicate<Player> permission(String permission) {
-        return p -> p.hasPermission(permission);
+    public static Predicate<CommandSender> permission(String permission) {
+        return new PermissionRequirement(permission);
     }
 
+    private record PermissionRequirement(String permission) implements Predicate<CommandSender> {
+        public boolean test(CommandSender sender) {
+            return sender.hasPermission(permission);
+        }
+    }
 
     private class NodeCommand extends Command {
         private final LiteralCommandNode rootNode;
@@ -96,6 +100,12 @@ public class CommandRegistry implements Listener {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,
                     () -> rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>())));
             return true;
+        }
+
+        public boolean testPermissionSilent(@NotNull CommandSender target) {
+            if (!(rootNode.requirement() instanceof PermissionRequirement))
+                return true;
+            return rootNode.testRequirement(target);
         }
 
         public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args)

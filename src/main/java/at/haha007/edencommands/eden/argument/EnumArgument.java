@@ -7,12 +7,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
-public class EnumArgumentParser<T extends Enum<T>> extends Argument<T> {
+public class EnumArgument<T extends Enum<T>> extends Argument<T> {
 
     private final Class<T> clazz;
     private final Component errorMessage;
 
-    public EnumArgumentParser(@NotNull Class<T> clazz, Component errorMessage) {
+    public EnumArgument(@NotNull Class<T> clazz, Component errorMessage) {
         if (!clazz.isEnum()) throw new IllegalArgumentException();
         if (clazz.getEnumConstants().length == 0) throw new IllegalArgumentException();
         this.errorMessage = errorMessage;
