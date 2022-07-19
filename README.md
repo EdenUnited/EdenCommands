@@ -8,33 +8,49 @@ CommandNodes are a tree based system.
 There are 2 basic variations of CommandNodes, the LiteralCommandNode and the ArgumentCommandNode.  
 The root node has to be a `LiteralCommandNode`.
 
+#### Literals
 ```java
-class MyClass {
-    public MyClass() {
+class MyPlugin extends JavaPlugin {
+    public void onEnable() {
         //creating a command node
-        CommandNode node = LiteralCommandNode.literal("mycommand");
-        node.executes(context -> {});
-        node.withPermission("myplugin.mycommand");
-        
+        CommandRegistry registry = new CommandRegistry(this);
+
+        LiteralCommandNode node = LiteralCommandNode("mycommand");
+
+        node.executor(context -> {
+            CommandSender sender = context.sender();
+            sender.sendMessage("command executed");
+        });
+        node.requires(CommandRegistry.permission("myplugin.mycommand"));
+
         //adding a subcommand -> /mycommand subcommand
-        node.then(LiteralCommandNode.literal("subcommand"));
-        
+        node.then(CommandRegistry.literal("subcommand").executor(c -> c.sender().sendMessage("subcommand executed")));
+
         //register it
         CommandRegistry.register(node);
     }
 }
 ```
 
+#### Arguments
 ```java
-class MyClass {
-    public MyClass() {
-        CommandNode node = LiteralCommandNode.literal("mycommand");
-        CommandNode argument = ArgumentCommandNode("key", IntegerArgumentParser.intParser(0, 10));
+class MyPlugin extends JavaPlugin {
+    public void onEnable() {
+        CommandRegistry registry = new CommandRegistry(this);
+        CommandNode node = new LiteralCommandNode("mycommand");
+
+        ArgumentCommandNode<Integer> argument = new ArgumentCommandNode<>(
+                "key",
+                IntegerArgument.integer(0, 10, Component.text("You have to supply an integer between 0 and 10!"))
+        );
         argument.executes(context -> {
-            Integer number = context.getParameter("key", Integer.class);
+            Integer number = context.parameter("key");
             context.getSender().sendMessage(number.toString());
         });
+        
         node.then(argument);
+
+        registry.register(node);
     }
 }
 ```
@@ -74,37 +90,6 @@ class MyPlugin extends JavaPlugin {
             return 1;
         });
         node.then(argument);
-    }
-}
-```
-
-
-### Annotations
-Register the root object via ``CommandRegistry.register(object)``.
-
-```java
-class MyClass {
-    public MyClass() {
-        CommandRegistry.register(this);
-    }
-
-    @Command("mycommand")
-    void onCommand(CommandContext context){
-    }
-}
-```
-
-```java
-class MyClass {
-    @Command("mycommand")
-    private final Object command = new Object() {
-        @Command("subcommand")
-        void onCommand(CommandContext context) {
-        }
-    };
-
-    public MyClass() {
-        CommandRegistry.register(this);
     }
 }
 ```
