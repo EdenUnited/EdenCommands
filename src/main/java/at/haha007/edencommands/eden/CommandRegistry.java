@@ -49,6 +49,9 @@ public class CommandRegistry implements Listener {
         String buffer = event.getBuffer();
         if (!buffer.startsWith("/"))
             return;
+        if (buffer.substring(1).toLowerCase().startsWith(plugin.getName().toLowerCase())) {
+            buffer = "/" + buffer.substring(plugin.getName().length() + 2);
+        }
 
         String[] args = buffer.substring(1).split("\\s+");
         if (buffer.endsWith(" ")) {
@@ -95,7 +98,7 @@ public class CommandRegistry implements Listener {
 
         public boolean execute(@NotNull CommandSender sender, @NotNull String label, String[] args) {
             String[] input = new String[args.length + 1];
-            input[0] = label;
+            input[0] = rootNode.literal();
             System.arraycopy(args, 0, input, 1, args.length);
             Bukkit.getScheduler().runTaskAsynchronously(plugin,
                     () -> rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>())));

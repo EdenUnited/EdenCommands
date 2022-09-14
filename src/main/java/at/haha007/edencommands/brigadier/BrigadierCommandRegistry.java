@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 //This class requires ProtocolLib, make sure to add the dependency in your plugin.yml
+@Deprecated(forRemoval = true)
 public class BrigadierCommandRegistry {
     private final CommandDispatcher<Player> dispatcher;
     private final ProtocolManager pm = ProtocolLibrary.getProtocolManager();
