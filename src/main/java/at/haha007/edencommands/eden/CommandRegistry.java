@@ -49,7 +49,7 @@ public class CommandRegistry implements Listener {
         String buffer = event.getBuffer();
         if (!buffer.startsWith("/"))
             return;
-        if (buffer.substring(1).toLowerCase().startsWith(plugin.getName().toLowerCase())) {
+        if (buffer.toLowerCase().startsWith("/" + plugin.getName().toLowerCase() + ":")) {
             buffer = "/" + buffer.substring(plugin.getName().length() + 2);
         }
 
