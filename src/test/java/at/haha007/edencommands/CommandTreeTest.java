@@ -1,6 +1,6 @@
-package at.haha007.edencommands.eden;
+package at.haha007.edencommands;
 
-import at.haha007.edencommands.eden.argument.StringArgument;
+import at.haha007.edencommands.argument.StringArgument;
 import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

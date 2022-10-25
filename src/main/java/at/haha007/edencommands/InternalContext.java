@@ -1,6 +1,6 @@
-package at.haha007.edencommands.eden;
+package at.haha007.edencommands;
 
-import at.haha007.edencommands.eden.argument.ParsedArgument;
+import at.haha007.edencommands.argument.ParsedArgument;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

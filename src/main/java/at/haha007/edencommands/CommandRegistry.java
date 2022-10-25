@@ -1,6 +1,6 @@
-package at.haha007.edencommands.eden;
+package at.haha007.edencommands;
 
-import at.haha007.edencommands.eden.argument.Argument;
+import at.haha007.edencommands.argument.Argument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;

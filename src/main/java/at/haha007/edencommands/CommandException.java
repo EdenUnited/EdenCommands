@@ -1,4 +1,4 @@
-package at.haha007.edencommands.eden;
+package at.haha007.edencommands;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

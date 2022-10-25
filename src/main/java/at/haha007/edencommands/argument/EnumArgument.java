@@ -1,7 +1,7 @@
-package at.haha007.edencommands.eden.argument;
+package at.haha007.edencommands.argument;
 
-import at.haha007.edencommands.eden.CommandContext;
-import at.haha007.edencommands.eden.CommandException;
+import at.haha007.edencommands.CommandContext;
+import at.haha007.edencommands.CommandException;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 

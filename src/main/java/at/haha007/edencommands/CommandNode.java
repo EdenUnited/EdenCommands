@@ -1,4 +1,4 @@
-package at.haha007.edencommands.eden;
+package at.haha007.edencommands;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

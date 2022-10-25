@@ -1,4 +1,4 @@
-package at.haha007.edencommands.eden.argument;
+package at.haha007.edencommands.argument;
 
 import lombok.experimental.Accessors;
 

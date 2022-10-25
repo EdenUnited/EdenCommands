@@ -1,7 +1,7 @@
-package at.haha007.edencommands.eden;
+package at.haha007.edencommands;
 
-import at.haha007.edencommands.eden.argument.Argument;
-import at.haha007.edencommands.eden.argument.ParsedArgument;
+import at.haha007.edencommands.argument.Argument;
+import at.haha007.edencommands.argument.ParsedArgument;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
