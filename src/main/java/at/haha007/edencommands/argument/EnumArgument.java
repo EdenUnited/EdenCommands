@@ -17,7 +17,7 @@ public class EnumArgument<T extends Enum<T>> extends Argument<T> {
         if (clazz.getEnumConstants().length == 0) throw new IllegalArgumentException();
         this.errorMessage = errorMessage;
         this.clazz = clazz;
-        tabCompleter(context -> Arrays.stream(clazz.getEnumConstants()).map(T::name).map(String::toLowerCase).toList());
+        tabCompleter = context -> Arrays.stream(clazz.getEnumConstants()).map(T::name).map(String::toLowerCase).toList();
     }
 
     public @NotNull ParsedArgument<T> parse(CommandContext context) throws CommandException {

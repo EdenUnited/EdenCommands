@@ -1,6 +1,5 @@
 package at.haha007.edencommands;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +8,7 @@ import org.bukkit.command.CommandSender;
 
 import java.util.Map;
 
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor
 @EqualsAndHashCode
 @Accessors(fluent = true)
 public class CommandContext {
