@@ -2,6 +2,7 @@ package at.haha007.edencommands.argument;
 
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
+import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Singular;
@@ -28,8 +29,10 @@ public class DoubleArgument extends Argument<Double> {
                            Function<String, Component> notDoubleMessage,
                            @NotNull @Singular List<Double> completions,
                            TriState filterByName) {
-        this.limitations = limitations;
 
+        super(new TabCompleter(completions, limitations), filterByName == null || filterByName.toBooleanOrElse(true));
+
+        this.limitations = limitations;
         //create notDoubleMessage if it is not set
         if (notDoubleMessage == null) {
             notDoubleMessage = s -> Component.text("Argument <", NamedTextColor.RED)
@@ -37,14 +40,6 @@ public class DoubleArgument extends Argument<Double> {
                     .append(Component.text("> must be of type double!", NamedTextColor.RED));
         }
         this.notDoubleMessage = notDoubleMessage;
-
-        //format to 8 decimal places, 0.1+0.2 can be annoying
-        DecimalFormat format = new DecimalFormat("#.########");
-        List<String> tabCompletions = completions.stream().map(format::format).toList();
-
-        super.tabCompleter = c -> tabCompletions;
-        if (filterByName == null) filterByName = TriState.NOT_SET;
-        super.filterByName = filterByName.toBooleanOrElse(true);
     }
 
     @Override
@@ -68,6 +63,23 @@ public class DoubleArgument extends Argument<Double> {
 
         //return as parsed argument
         return new ParsedArgument<>(d, 1);
+    }
+
+    @AllArgsConstructor
+    private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
+        //format to 8 decimal places, 0.1+0.2 can be annoying
+        private static final DecimalFormat format = new DecimalFormat("#.########");
+        private final List<Double> completions;
+        private final List<Filter<Double>> filters;
+
+        public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
+            CommandSender sender = context.sender();
+            return completions.stream()
+                    .filter(d -> filters.stream().anyMatch(e -> e.checkLimit(sender, d) != null))
+                    .map(format::format)
+                    .map(AsyncTabCompleteEvent.Completion::completion)
+                    .toList();
+        }
     }
 
     /**

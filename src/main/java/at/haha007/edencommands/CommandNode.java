@@ -1,5 +1,6 @@
 package at.haha007.edencommands;
 
+import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -86,7 +87,7 @@ abstract class CommandNode<T extends CommandNode<T>> {
         return sendUsageText(context.sender());
     }
 
-    List<String> tabComplete(InternalContext context) {
+    List<AsyncTabCompleteEvent.Completion> tabComplete(InternalContext context) {
         if (context.hasNext())
             return children.stream()
                     .map(c -> c.tabComplete(context.next()))

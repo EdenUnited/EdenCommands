@@ -2,6 +2,7 @@ package at.haha007.edencommands;
 
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
+import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,7 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
         return this;
     }
 
-    List<String> tabComplete(InternalContext context) {
+    List<AsyncTabCompleteEvent.Completion> tabComplete(InternalContext context) {
         if (!testRequirement(context.sender()))
             return List.of();
         try {

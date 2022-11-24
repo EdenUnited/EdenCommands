@@ -2,21 +2,23 @@ package at.haha007.edencommands.argument;
 
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
-import lombok.experimental.Accessors;
+import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
+import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@Accessors(fluent = true)
+@AllArgsConstructor
 public abstract class Argument<T> {
-    protected Function<CommandContext, List<String>> tabCompleter = c -> null;
+    @NotNull
+    private final Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter;
 
     /**
      * Filters tab completions by the string that gets tab-completed
      */
-    protected boolean filterByName = true;
+    private final boolean filterByName;
 
     /**
      * Parses the argument
@@ -34,13 +36,13 @@ public abstract class Argument<T> {
      * @param context The context for the completion
      * @return A {@link List<String>} of completions
      */
-    public final List<String> tabComplete(CommandContext context) {
+    public final List<AsyncTabCompleteEvent.Completion> tabComplete(CommandContext context) {
         String start = context.input()[context.pointer()];
-        List<String> list = tabCompleter.apply(context);
+        List<AsyncTabCompleteEvent.Completion> list = tabCompleter.apply(context);
         if (list == null) return List.of();
-        Stream<String> stream = list.stream();
+        Stream<AsyncTabCompleteEvent.Completion> stream = list.stream();
         if (filterByName)
-            stream = stream.filter(s -> startsWith(s, start));
+            stream = stream.filter(s -> startsWith(s.suggestion(), start));
         return stream.toList();
     }
 

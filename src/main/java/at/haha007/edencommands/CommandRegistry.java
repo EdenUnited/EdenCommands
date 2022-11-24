@@ -63,11 +63,11 @@ public class CommandRegistry implements Listener {
 
         NodeCommand command = registeredCommands.get(args[0].toLowerCase());
         if (command == null) return;
-        List<String> completions = command.rootNode().tabComplete(new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>()));
+        List<AsyncTabCompleteEvent.Completion> completions = command.rootNode().tabComplete(new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>()));
         if (completions == null)
             completions = List.of();
         completions = completions.stream().distinct().sorted().toList();
-        event.setCompletions(completions);
+        event.completions(completions);
     }
 
     public static LiteralCommandNode literal(String key) {
