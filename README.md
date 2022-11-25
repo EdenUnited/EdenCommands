@@ -106,7 +106,7 @@ class MyPlugin extends JavaPlugin {
 <dependency>
     <groupId>com.github.EdenUnited</groupId>
     <artifactId>EdenCommands</artifactId>
-    <version>version</version>
+    <version>2.2</version>
 </dependency>
 ```
 
@@ -118,10 +118,6 @@ repositories {
 ```
 ```
 dependencies {
-    implementation 'com.github.EdenUnited:EdenCommands:version'
+    implementation 'com.github.EdenUnited:EdenCommands:2.2'
 }
 ```
-
-## Version
-
-[![](https://jitpack.io/v/EdenUnited/EdenCommands.svg)](https://jitpack.io/#EdenUnited/EdenCommands)

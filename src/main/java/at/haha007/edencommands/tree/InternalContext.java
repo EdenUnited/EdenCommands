@@ -1,5 +1,6 @@
-package at.haha007.edencommands;
+package at.haha007.edencommands.tree;
 
+import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.argument.ParsedArgument;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,8 +11,8 @@ import org.bukkit.command.CommandSender;
 import java.util.Map;
 
 @Accessors(fluent = true)
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
-class InternalContext {
+@AllArgsConstructor()
+public class InternalContext {
     @Getter(AccessLevel.PACKAGE)
     private final CommandSender sender;
     private final String[] input;
@@ -26,7 +27,7 @@ class InternalContext {
         return new InternalContext(sender, input, stackPointer + 1, parsedArguments);
     }
 
-    public InternalContext next(int pointerIncrements) {
+    InternalContext next(int pointerIncrements) {
         return new InternalContext(sender, input, stackPointer + pointerIncrements, parsedArguments);
     }
 
@@ -34,9 +35,8 @@ class InternalContext {
         return input.length > stackPointer + 1;
     }
 
-    InternalContext putArgument(String key, ParsedArgument<?> argument) {
+    void putArgument(String key, ParsedArgument<?> argument) {
         parsedArguments.put(key, argument.result());
-        return this;
     }
 
     CommandContext context() {

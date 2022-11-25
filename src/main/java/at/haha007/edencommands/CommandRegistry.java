@@ -1,6 +1,9 @@
 package at.haha007.edencommands;
 
 import at.haha007.edencommands.argument.Argument;
+import at.haha007.edencommands.tree.ArgumentCommandNode;
+import at.haha007.edencommands.tree.InternalContext;
+import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -36,7 +39,7 @@ public class CommandRegistry implements Listener {
     public void register(LiteralCommandNode node) {
         String literal = node.literal().toLowerCase();
         if (registeredCommands.containsKey(literal)) {
-            registeredCommands.get(literal).rootNode.merge(node);
+//            registeredCommands.get(literal).rootNode.merge(node);
             return;
         }
         NodeCommand command = new NodeCommand(node);
@@ -70,12 +73,12 @@ public class CommandRegistry implements Listener {
         event.completions(completions);
     }
 
-    public static LiteralCommandNode literal(String key) {
-        return new LiteralCommandNode(key);
+    public static LiteralCommandNode.LiteralCommandBuilder literal(String key) {
+        return LiteralCommandNode.builder(key);
     }
 
-    public static <T> ArgumentCommandNode<T> argument(String key, Argument<T> argument) {
-        return new ArgumentCommandNode<>(key, argument);
+    public static <T> ArgumentCommandNode.ArgumentCommandBuilder<T> argument(String key, Argument<T> argument) {
+        return ArgumentCommandNode.builder(key, argument);
     }
 
     public static Predicate<CommandSender> permission(String permission) {
@@ -106,8 +109,6 @@ public class CommandRegistry implements Listener {
         }
 
         public boolean testPermissionSilent(@NotNull CommandSender target) {
-            if (!(rootNode.requirement() instanceof PermissionRequirement))
-                return true;
             return rootNode.testRequirement(target);
         }
 
