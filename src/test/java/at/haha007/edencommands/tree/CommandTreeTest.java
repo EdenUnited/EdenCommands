@@ -1,5 +1,6 @@
 package at.haha007.edencommands.tree;
 
+import at.haha007.edencommands.argument.Completion;
 import at.haha007.edencommands.argument.DoubleArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import net.kyori.adventure.text.Component;
@@ -28,10 +29,10 @@ public class CommandTreeTest {
     void tabArg() {
         DoubleArgument argument = DoubleArgument.builder()
                 .notDoubleMessage(s -> Component.text("Argument must be of type double"))
-                .completion(.1)
-                .completion(1.)
-                .completion(10.01)
-                .completion(0.1 + 0.2)
+                .completion(new Completion<>(.1, Component.text("meow")))
+                .completion(new Completion<>(1.))
+                .completion(new Completion<>(10.01))
+                .completion(new Completion<>(0.1 + 0.2))
                 .limitation(new DoubleArgument.MinimumFilter(Component.text("text"), 0))
                 .build();
 
@@ -39,6 +40,5 @@ public class CommandTreeTest {
         List<AsyncTabCompleteEvent.Completion> complets = node.tabComplete(new InternalContext(sender, new String[]{"test", ""}, 0, new LinkedHashMap<>()));
         Assertions.assertEquals(complets.size(), 4);
         Assertions.assertEquals(complets.get(0).suggestion(), "0.1");
-
     }
 }

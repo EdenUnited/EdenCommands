@@ -27,7 +27,7 @@ public class FloatArgument extends Argument<Float> {
     @Builder
     private FloatArgument(@NotNull @Singular List<Filter<Float>> limitations,
                            Function<String, Component> notFloatMessage,
-                           @NotNull @Singular List<Float> completions,
+                           @NotNull @Singular List<Completion<Float>> completions,
                            TriState filterByName) {
 
         super(new TabCompleter(completions, limitations), filterByName == null || filterByName.toBooleanOrElse(true));
@@ -69,17 +69,17 @@ public class FloatArgument extends Argument<Float> {
     private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
         //format to 5 decimal places, 0.1+0.2 can be annoying
         private static final DecimalFormat format = new DecimalFormat("#.#####");
-        private final List<Float> completions;
+        private final List<Completion<Float>> completions;
         private final List<Filter<Float>> filters;
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(f -> filters.stream().anyMatch(e -> e.checkLimit(sender, f) != null))
-                    .map(format::format)
-                    .map(AsyncTabCompleteEvent.Completion::completion)
+                    .filter(f -> filters.stream().anyMatch(e -> e.checkLimit(sender, f.completion()) != null))
+                    .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }
+
     }
 
     /**

@@ -25,9 +25,9 @@ public class IntegerArgument extends Argument<Integer> {
     private final Function<String, Component> notIntegerMessage;
 
     @Builder
-    private IntegerArgument(@NotNull @Singular java.util.List<Filter<Integer>> limitations,
+    private IntegerArgument(@NotNull @Singular List<Filter<Integer>> limitations,
                             Function<String, Component> notIntegerMessage,
-                            @NotNull @Singular List<Integer> completions,
+                            @NotNull @Singular List<Completion<Integer>> completions,
                             TriState filterByName) {
 
         super(new IntegerArgument.TabCompleter(completions, limitations), filterByName == null || filterByName.toBooleanOrElse(true));
@@ -69,15 +69,14 @@ public class IntegerArgument extends Argument<Integer> {
     private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
         //format to 5 decimal places, 0.1+0.2 can be annoying
         private static final DecimalFormat format = new DecimalFormat("#.#####");
-        private final List<Integer> completions;
+        private final List<Completion<Integer>> completions;
         private final List<Filter<Integer>> filters;
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(f -> filters.stream().anyMatch(e -> e.checkLimit(sender, f) != null))
-                    .map(format::format)
-                    .map(AsyncTabCompleteEvent.Completion::completion)
+                    .filter(i -> filters.stream().anyMatch(e -> e.checkLimit(sender, i.completion()) != null))
+                    .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }
     }

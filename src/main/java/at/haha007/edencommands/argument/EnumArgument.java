@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -17,7 +17,11 @@ public class EnumArgument<T extends Enum<T>> extends Argument<T> {
     private final Component errorMessage;
 
     public EnumArgument(@NotNull Class<T> clazz, Component errorMessage) {
-        super(new TabCompleter<>(clazz), true);
+        this(clazz, errorMessage, null);
+    }
+
+    public EnumArgument(@NotNull Class<T> clazz, Component errorMessage, Function<T, Component> tooltipProvider) {
+        super(new TabCompleter<>(clazz, tooltipProvider == null ? t -> null : tooltipProvider), true);
         if (!clazz.isEnum()) throw new IllegalArgumentException();
         if (clazz.getEnumConstants().length == 0) throw new IllegalArgumentException();
         this.errorMessage = errorMessage;
@@ -36,13 +40,19 @@ public class EnumArgument<T extends Enum<T>> extends Argument<T> {
     @AllArgsConstructor
     private static class TabCompleter<T extends Enum<T>> implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
         private final Class<T> clazz;
+        @NotNull
+        private final Function<T, Component> tooltipProvider;
 
         @Override
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
-            return Arrays.stream(clazz.getEnumConstants())
-                    .map(T::name).map(String::toLowerCase)
-                    .map(AsyncTabCompleteEvent.Completion::completion)
-                    .toList();
+            List<AsyncTabCompleteEvent.Completion> list = new ArrayList<>();
+            for (T t : clazz.getEnumConstants()) {
+                String name = t.name();
+                String suggestion = name.toLowerCase();
+                Component tooltip = tooltipProvider.apply(t);
+                list.add(AsyncTabCompleteEvent.Completion.completion(suggestion, tooltip));
+            }
+            return list;
         }
     }
 }

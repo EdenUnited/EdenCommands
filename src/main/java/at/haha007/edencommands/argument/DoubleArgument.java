@@ -27,7 +27,7 @@ public class DoubleArgument extends Argument<Double> {
     @Builder
     private DoubleArgument(@NotNull @Singular List<Filter<Double>> limitations,
                            Function<String, Component> notDoubleMessage,
-                           @NotNull @Singular List<Double> completions,
+                           @NotNull @Singular List<Completion<Double>> completions,
                            TriState filterByName) {
 
         super(new TabCompleter(completions, limitations), filterByName == null || filterByName.toBooleanOrElse(true));
@@ -69,15 +69,14 @@ public class DoubleArgument extends Argument<Double> {
     private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
         //format to 8 decimal places, 0.1+0.2 can be annoying
         private static final DecimalFormat format = new DecimalFormat("#.########");
-        private final List<Double> completions;
+        private final List<Completion<Double>> completions;
         private final List<Filter<Double>> filters;
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(d -> filters.stream().anyMatch(e -> e.checkLimit(sender, d) != null))
-                    .map(format::format)
-                    .map(AsyncTabCompleteEvent.Completion::completion)
+                    .filter(d -> filters.stream().anyMatch(e -> e.checkLimit(sender, d.completion()) != null))
+                    .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }
     }
