@@ -17,11 +17,11 @@ public class StringArgument extends Argument<String> {
     private final StringParser parser;
 
     @Builder
-    public StringArgument(@NotNull StringParser parser,
+    public StringArgument(StringParser parser,
                           @NotNull @Singular List<AsyncTabCompleteEvent.Completion> completions,
                           TriState filterByName) {
         super(c -> completions, filterByName == null || filterByName.toBooleanOrElse(true));
-        this.parser = parser;
+        this.parser = parser == null ? word() : parser;
     }
 
     @Override

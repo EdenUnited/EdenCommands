@@ -12,7 +12,6 @@ import net.kyori.adventure.util.TriState;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,8 +66,6 @@ public class IntegerArgument extends Argument<Integer> {
 
     @AllArgsConstructor
     private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
-        //format to 5 decimal places, 0.1+0.2 can be annoying
-        private static final DecimalFormat format = new DecimalFormat("#.#####");
         private final List<Completion<Integer>> completions;
         private final List<Filter<Integer>> filters;
 
@@ -76,7 +73,7 @@ public class IntegerArgument extends Argument<Integer> {
             CommandSender sender = context.sender();
             return completions.stream()
                     .filter(i -> filters.stream().anyMatch(e -> e.check(sender, i.completion()) != null))
-                    .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
+                    .map(c -> AsyncTabCompleteEvent.Completion.completion(String.valueOf(c.completion()), c.tooltip()))
                     .toList();
         }
     }
@@ -90,8 +87,8 @@ public class IntegerArgument extends Argument<Integer> {
         private final Component error;
         private final int min;
 
-        public Component check(CommandSender sender, Integer d) {
-            if (min < d)
+        public Component check(CommandSender sender, Integer i) {
+            if (i < min)
                 return error;
             return null;
         }
@@ -106,8 +103,8 @@ public class IntegerArgument extends Argument<Integer> {
         private final Component error;
         private final int max;
 
-        public Component check(CommandSender sender, Integer d) {
-            if (max > d)
+        public Component check(CommandSender sender, Integer i) {
+            if (i > max)
                 return error;
             return null;
         }

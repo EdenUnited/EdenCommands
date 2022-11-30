@@ -43,7 +43,6 @@ public class EnumArgument<T extends Enum<T>> extends Argument<T> {
         @NotNull
         private final Function<T, Component> tooltipProvider;
 
-        @Override
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             List<AsyncTabCompleteEvent.Completion> list = new ArrayList<>();
             for (T t : clazz.getEnumConstants()) {

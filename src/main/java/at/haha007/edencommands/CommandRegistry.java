@@ -14,10 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class CommandRegistry implements Listener {
@@ -39,8 +36,7 @@ public class CommandRegistry implements Listener {
     public void register(LiteralCommandNode node) {
         String literal = node.literal().toLowerCase();
         if (registeredCommands.containsKey(literal)) {
-//            registeredCommands.get(literal).rootNode.merge(node);
-            return;
+            throw new IllegalArgumentException("Already registered command with the key <%s>".formatted(literal));
         }
         NodeCommand command = new NodeCommand(node);
         registeredCommands.put(literal.toLowerCase(), command);
@@ -69,7 +65,7 @@ public class CommandRegistry implements Listener {
         List<AsyncTabCompleteEvent.Completion> completions = command.rootNode().tabComplete(new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>()));
         if (completions == null)
             completions = List.of();
-        completions = completions.stream().distinct().sorted().toList();
+        completions = completions.stream().distinct().sorted(Comparator.comparing(AsyncTabCompleteEvent.Completion::suggestion)).toList();
         event.completions(completions);
     }
 

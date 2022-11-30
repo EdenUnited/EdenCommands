@@ -91,7 +91,7 @@ public class DoubleArgument extends Argument<Double> {
         private final double min;
 
         public Component check(CommandSender sender, Double d) {
-            if (min < d)
+            if (d < min)
                 return error;
             return null;
         }
@@ -107,7 +107,7 @@ public class DoubleArgument extends Argument<Double> {
         private final double max;
 
         public Component check(CommandSender sender, Double d) {
-            if (max > d)
+            if (d > max)
                 return error;
             return null;
         }

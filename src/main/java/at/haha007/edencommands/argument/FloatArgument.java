@@ -91,8 +91,8 @@ public class FloatArgument extends Argument<Float> {
         private final Component error;
         private final float min;
 
-        public Component check(CommandSender sender, Float d) {
-            if (min < d)
+        public Component check(CommandSender sender, Float f) {
+            if (f < min)
                 return error;
             return null;
         }
@@ -107,8 +107,8 @@ public class FloatArgument extends Argument<Float> {
         private final Component error;
         private final float max;
 
-        public Component check(CommandSender sender, Float d) {
-            if (max > d)
+        public Component check(CommandSender sender, Float f) {
+            if (f > max)
                 return error;
             return null;
         }

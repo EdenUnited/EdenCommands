@@ -12,7 +12,6 @@ import net.kyori.adventure.util.TriState;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,8 +66,6 @@ public class LongArgument extends Argument<Long> {
 
     @AllArgsConstructor
     private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
-        //format to 5 decimal places, 0.1+0.2 can be annoying
-        private static final DecimalFormat format = new DecimalFormat("#.#####");
         private final List<Completion<Long>> completions;
         private final List<Filter<Long>> filters;
 
@@ -76,7 +73,7 @@ public class LongArgument extends Argument<Long> {
             CommandSender sender = context.sender();
             return completions.stream()
                     .filter(i -> filters.stream().anyMatch(e -> e.check(sender, i.completion()) != null))
-                    .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
+                    .map(c -> AsyncTabCompleteEvent.Completion.completion(String.valueOf(c.completion()), c.tooltip()))
                     .toList();
         }
     }
@@ -91,7 +88,7 @@ public class LongArgument extends Argument<Long> {
         private final long min;
 
         public Component check(CommandSender sender, Long d) {
-            if (min < d)
+            if (d < min)
                 return error;
             return null;
         }
@@ -107,7 +104,7 @@ public class LongArgument extends Argument<Long> {
         private final long max;
 
         public Component check(CommandSender sender, Long d) {
-            if (max > d)
+            if (d > max)
                 return error;
             return null;
         }
