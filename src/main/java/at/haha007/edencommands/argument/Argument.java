@@ -42,11 +42,12 @@ public abstract class Argument<T> {
         if (list == null) return List.of();
         Stream<AsyncTabCompleteEvent.Completion> stream = list.stream();
         if (filterByName)
-            stream = stream.filter(s -> startsWith(s.suggestion(), start));
+            stream = stream.filter(s -> matches(s.suggestion(), start));
         return stream.toList();
     }
 
-    protected boolean startsWith(String literal, String start) {
-        return literal.toLowerCase().startsWith(start.toLowerCase());
+    private boolean matches(String literal, String start) {
+        return literal.contains(start);
+//        return literal.toLowerCase().startsWith(start.toLowerCase());
     }
 }

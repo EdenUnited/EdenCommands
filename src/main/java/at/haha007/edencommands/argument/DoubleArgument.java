@@ -25,14 +25,14 @@ public class DoubleArgument extends Argument<Double> {
     private final Function<String, Component> notDoubleMessage;
 
     @Builder
-    private DoubleArgument(@NotNull @Singular List<Filter<Double>> limitations,
+    private DoubleArgument(@NotNull @Singular List<Filter<Double>> filters,
                            Function<String, Component> notDoubleMessage,
                            @NotNull @Singular List<Completion<Double>> completions,
                            TriState filterByName) {
 
-        super(new TabCompleter(completions, limitations), filterByName == null || filterByName.toBooleanOrElse(true));
+        super(new TabCompleter(completions, filters), filterByName == null || filterByName.toBooleanOrElse(true));
 
-        this.limitations = limitations;
+        this.limitations = filters;
         //create notDoubleMessage if it is not set
         if (notDoubleMessage == null) {
             notDoubleMessage = s -> Component.text("Argument <", NamedTextColor.RED)
@@ -56,7 +56,7 @@ public class DoubleArgument extends Argument<Double> {
         //check limitations
         CommandSender sender = context.sender();
         Optional<Component> any = limitations.stream()
-                .map(l -> l.checkLimit(sender, d)).filter(Objects::nonNull).findAny();
+                .map(l -> l.check(sender, d)).filter(Objects::nonNull).findAny();
         if (any.isPresent()) {
             throw new CommandException(any.get(), context);
         }
@@ -75,7 +75,7 @@ public class DoubleArgument extends Argument<Double> {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(d -> filters.stream().anyMatch(e -> e.checkLimit(sender, d.completion()) != null))
+                    .filter(d -> filters.stream().anyMatch(e -> e.check(sender, d.completion()) != null))
                     .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }
@@ -90,7 +90,7 @@ public class DoubleArgument extends Argument<Double> {
         private final Component error;
         private final double min;
 
-        public Component checkLimit(CommandSender sender, Double d) {
+        public Component check(CommandSender sender, Double d) {
             if (min < d)
                 return error;
             return null;
@@ -106,7 +106,7 @@ public class DoubleArgument extends Argument<Double> {
         private final Component error;
         private final double max;
 
-        public Component checkLimit(CommandSender sender, Double d) {
+        public Component check(CommandSender sender, Double d) {
             if (max > d)
                 return error;
             return null;
@@ -121,7 +121,7 @@ public class DoubleArgument extends Argument<Double> {
     public static class NaNFilter implements Filter<Double> {
         private final Component error;
 
-        public Component checkLimit(CommandSender sender, Double d) {
+        public Component check(CommandSender sender, Double d) {
             if (d.isNaN())
                 return error;
             return null;

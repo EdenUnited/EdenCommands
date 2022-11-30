@@ -18,59 +18,59 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class IntegerArgument extends Argument<Integer> {
+public class LongArgument extends Argument<Long> {
     @NotNull
-    private final List<Filter<Integer>> filters;
+    private final List<Filter<Long>> filters;
     @NotNull
-    private final Function<String, Component> notIntegerMessage;
+    private final Function<String, Component> notLongMessage;
 
     @Builder
-    private IntegerArgument(@NotNull @Singular List<Filter<Integer>> filters,
-                            Function<String, Component> notIntegerMessage,
-                            @NotNull @Singular List<Completion<Integer>> completions,
-                            TriState filterByName) {
+    private LongArgument(@NotNull @Singular List<Filter<Long>> filters,
+                         Function<String, Component> notLongMessage,
+                         @NotNull @Singular List<Completion<Long>> completions,
+                         TriState filterByName) {
 
-        super(new IntegerArgument.TabCompleter(completions, filters), filterByName == null || filterByName.toBooleanOrElse(true));
+        super(new LongArgument.TabCompleter(completions, filters), filterByName == null || filterByName.toBooleanOrElse(true));
 
         this.filters = filters;
-        //create notIntegerMessage if it is not set
-        if (notIntegerMessage == null) {
-            notIntegerMessage = s -> Component.text("Argument <", NamedTextColor.RED)
+        //create notLongMessage if it is not set
+        if (notLongMessage == null) {
+            notLongMessage = s -> Component.text("Argument <", NamedTextColor.RED)
                     .append(Component.text(s, NamedTextColor.GOLD))
-                    .append(Component.text("> must be of type int!", NamedTextColor.RED));
+                    .append(Component.text("> must be of type long!", NamedTextColor.RED));
         }
-        this.notIntegerMessage = notIntegerMessage;
+        this.notLongMessage = notLongMessage;
     }
 
     @Override
-    public @NotNull ParsedArgument<Integer> parse(CommandContext context) throws CommandException {
-        int i;
+    public @NotNull ParsedArgument<Long> parse(CommandContext context) throws CommandException {
+        long l;
         String s = context.input()[context.pointer()];
-        //parse the int
+        //parse the long
         try {
-            i = Integer.parseInt(s);
+            l = Long.parseLong(s);
         } catch (NumberFormatException e) {
-            throw new CommandException(notIntegerMessage.apply(s), context);
+            throw new CommandException(notLongMessage.apply(s), context);
         }
 
         //check limitations
         CommandSender sender = context.sender();
         Optional<Component> any = filters.stream()
-                .map(l -> l.check(sender, i)).filter(Objects::nonNull).findAny();
+                .map(f -> f.check(sender, l)).filter(Objects::nonNull).findAny();
         if (any.isPresent()) {
             throw new CommandException(any.get(), context);
         }
 
         //return as parsed argument
-        return new ParsedArgument<>(i, 1);
+        return new ParsedArgument<>(l, 1);
     }
 
     @AllArgsConstructor
     private static class TabCompleter implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
         //format to 5 decimal places, 0.1+0.2 can be annoying
         private static final DecimalFormat format = new DecimalFormat("#.#####");
-        private final List<Completion<Integer>> completions;
-        private final List<Filter<Integer>> filters;
+        private final List<Completion<Long>> completions;
+        private final List<Filter<Long>> filters;
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
@@ -86,11 +86,11 @@ public class IntegerArgument extends Argument<Integer> {
      */
     @AllArgsConstructor
     @NotNull
-    public static class MinimumFilter implements Filter<Integer> {
+    public static class MinimumFilter implements Filter<Long> {
         private final Component error;
-        private final int min;
+        private final long min;
 
-        public Component check(CommandSender sender, Integer d) {
+        public Component check(CommandSender sender, Long d) {
             if (min < d)
                 return error;
             return null;
@@ -102,11 +102,11 @@ public class IntegerArgument extends Argument<Integer> {
      */
     @AllArgsConstructor
     @NotNull
-    public static class MaximumFilter implements Filter<Integer> {
+    public static class MaximumFilter implements Filter<Long> {
         private final Component error;
-        private final int max;
+        private final long max;
 
-        public Component check(CommandSender sender, Integer d) {
+        public Component check(CommandSender sender, Long d) {
             if (max > d)
                 return error;
             return null;

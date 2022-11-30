@@ -11,6 +11,6 @@ public interface Filter<T> {
      * @param type   the T that should be filtered
      * @return the error message that should be shown or null if it passed
      */
-    Component checkLimit(CommandSender sender, T type);
+    Component check(CommandSender sender, T type);
 }
 

@@ -20,19 +20,19 @@ import java.util.function.Function;
 
 public class FloatArgument extends Argument<Float> {
     @NotNull
-    private final List<Filter<Float>> limitations;
+    private final List<Filter<Float>> filters;
     @NotNull
     private final Function<String, Component> notFloatMessage;
 
     @Builder
-    private FloatArgument(@NotNull @Singular List<Filter<Float>> limitations,
+    private FloatArgument(@NotNull @Singular List<Filter<Float>> filters,
                            Function<String, Component> notFloatMessage,
                            @NotNull @Singular List<Completion<Float>> completions,
                            TriState filterByName) {
 
-        super(new TabCompleter(completions, limitations), filterByName == null || filterByName.toBooleanOrElse(true));
+        super(new TabCompleter(completions, filters), filterByName == null || filterByName.toBooleanOrElse(true));
 
-        this.limitations = limitations;
+        this.filters = filters;
         //create notFloatMessage if it is not set
         if (notFloatMessage == null) {
             notFloatMessage = s -> Component.text("Argument <", NamedTextColor.RED)
@@ -55,8 +55,8 @@ public class FloatArgument extends Argument<Float> {
 
         //check limitations
         CommandSender sender = context.sender();
-        Optional<Component> any = limitations.stream()
-                .map(l -> l.checkLimit(sender, f)).filter(Objects::nonNull).findAny();
+        Optional<Component> any = filters.stream()
+                .map(l -> l.check(sender, f)).filter(Objects::nonNull).findAny();
         if (any.isPresent()) {
             throw new CommandException(any.get(), context);
         }
@@ -75,7 +75,7 @@ public class FloatArgument extends Argument<Float> {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(f -> filters.stream().anyMatch(e -> e.checkLimit(sender, f.completion()) != null))
+                    .filter(f -> filters.stream().anyMatch(e -> e.check(sender, f.completion()) != null))
                     .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }
@@ -91,7 +91,7 @@ public class FloatArgument extends Argument<Float> {
         private final Component error;
         private final float min;
 
-        public Component checkLimit(CommandSender sender, Float d) {
+        public Component check(CommandSender sender, Float d) {
             if (min < d)
                 return error;
             return null;
@@ -107,7 +107,7 @@ public class FloatArgument extends Argument<Float> {
         private final Component error;
         private final float max;
 
-        public Component checkLimit(CommandSender sender, Float d) {
+        public Component check(CommandSender sender, Float d) {
             if (max > d)
                 return error;
             return null;
@@ -122,7 +122,7 @@ public class FloatArgument extends Argument<Float> {
     public static class NaNFilter implements Filter<Float> {
         private final Component error;
 
-        public Component checkLimit(CommandSender sender, Float d) {
+        public Component check(CommandSender sender, Float d) {
             if (d.isNaN())
                 return error;
             return null;
