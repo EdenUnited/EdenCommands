@@ -73,7 +73,7 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
         }
 
         @NotNull
-        public LiteralCommandBuilder clone(){
+        public LiteralCommandBuilder clone() {
             LiteralCommandBuilder clone = new LiteralCommandBuilder(literal);
             clone.requirements.addAll(requirements);
             clone.children.addAll(children);

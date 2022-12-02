@@ -40,7 +40,6 @@ public class InternalContext {
     }
 
     CommandContext context() {
-        return new CommandContext(sender, input, parsedArguments, stackPointer);
+        return new CommandContext(sender, input.clone(), parsedArguments, stackPointer);
     }
-
 }

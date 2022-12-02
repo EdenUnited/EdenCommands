@@ -39,6 +39,8 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
 
     public @NotNull ParsedArgument<OfflinePlayer> parse(CommandContext context) throws CommandException {
         String key = context.input()[context.pointer()];
+        if (key.isEmpty())
+            throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
         CommandSender sender = context.sender();
         final Location location;
         if (sender instanceof BlockCommandSender bcs) location = bcs.getBlock().getLocation().toCenterLocation();

@@ -75,7 +75,7 @@ public class FloatArgument extends Argument<Float> {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(f -> filters.stream().anyMatch(e -> e.check(sender, f.completion()) != null))
+                    .filter(d -> filters.stream().noneMatch(e -> e.check(sender, d.completion()) != null))
                     .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }

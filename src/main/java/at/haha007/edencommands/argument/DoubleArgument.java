@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 public class DoubleArgument extends Argument<Double> {
     @NotNull
-    private final List<Filter<Double>> limitations;
+    private final List<Filter<Double>> filters;
     @NotNull
     private final Function<String, Component> notDoubleMessage;
 
@@ -32,7 +32,7 @@ public class DoubleArgument extends Argument<Double> {
 
         super(new TabCompleter(completions, filters), filterByName == null || filterByName.toBooleanOrElse(true));
 
-        this.limitations = filters;
+        this.filters = filters;
         //create notDoubleMessage if it is not set
         if (notDoubleMessage == null) {
             notDoubleMessage = s -> Component.text("Argument <", NamedTextColor.RED)
@@ -55,7 +55,7 @@ public class DoubleArgument extends Argument<Double> {
 
         //check limitations
         CommandSender sender = context.sender();
-        Optional<Component> any = limitations.stream()
+        Optional<Component> any = filters.stream()
                 .map(l -> l.check(sender, d)).filter(Objects::nonNull).findAny();
         if (any.isPresent()) {
             throw new CommandException(any.get(), context);
@@ -75,7 +75,7 @@ public class DoubleArgument extends Argument<Double> {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();
             return completions.stream()
-                    .filter(d -> filters.stream().anyMatch(e -> e.check(sender, d.completion()) != null))
+                    .filter(d -> filters.stream().noneMatch(e -> e.check(sender, d.completion()) != null))
                     .map(c -> AsyncTabCompleteEvent.Completion.completion(format.format(c.completion()), c.tooltip()))
                     .toList();
         }

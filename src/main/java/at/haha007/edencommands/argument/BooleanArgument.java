@@ -24,7 +24,7 @@ public class BooleanArgument extends Argument<Boolean> {
     public BooleanArgument(Function<String, Component> notBooleanError,
                            @NotNull @Singular List<BooleanMode> modes,
                            TriState filterByName) {
-        super(context -> modes.stream()
+        super(context -> (modes.isEmpty() ? List.of(BooleanMode.TRUE_FALSE) : modes).stream()
                         .map(m -> new String[]{m.yes, m.no})
                         .flatMap(Arrays::stream)
                         .map(AsyncTabCompleteEvent.Completion::completion)

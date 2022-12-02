@@ -37,17 +37,15 @@ public abstract class Argument<T> {
      * @return A {@link List<String>} of completions
      */
     public final List<AsyncTabCompleteEvent.Completion> tabComplete(CommandContext context) {
-        String start = context.input()[context.pointer()];
         List<AsyncTabCompleteEvent.Completion> list = tabCompleter.apply(context);
         if (list == null) return List.of();
         Stream<AsyncTabCompleteEvent.Completion> stream = list.stream();
         if (filterByName)
-            stream = stream.filter(s -> matches(s.suggestion(), start));
+            stream = stream.filter(s -> matches(s.suggestion(), context.input()[context.pointer()]));
         return stream.toList();
     }
 
     private boolean matches(String literal, String start) {
         return literal.contains(start);
-//        return literal.toLowerCase().startsWith(start.toLowerCase());
     }
 }

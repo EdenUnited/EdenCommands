@@ -8,14 +8,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CommaSeparatedArgument<T> extends Argument<List<T>> {
     private final Argument<T> argument;
 
     public CommaSeparatedArgument(Argument<T> argument) {
-        super(new CommaSeparatedTabCompleter<>(argument), false);
+        super(new CommaSeparatedTabCompleter<>(argument)::apply, false);
         this.argument = argument;
     }
 
@@ -33,15 +32,12 @@ public class CommaSeparatedArgument<T> extends Argument<List<T>> {
         return new ParsedArgument<>(list, 1);
     }
 
-    private static class CommaSeparatedTabCompleter<T> implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
-        private final Argument<T> argument;
-
-        public CommaSeparatedTabCompleter(Argument<T> argument) {
-            this.argument = argument;
-        }
-
+    private record CommaSeparatedTabCompleter<T>(Argument<T> argument) {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
-            String[] args = context.input()[context.pointer()].split(",");
+            String key = context.input()[context.pointer()];
+            if (key.endsWith(",")) key = key + " ";
+            String[] args = key.split(",");
+            args[args.length - 1] = args[args.length - 1].trim();
             String argsStr = String.join(",", Arrays.copyOfRange(args, 0, args.length - 1));
             String start = argsStr.length() > 0 ? argsStr + "," : argsStr;
             context.input()[context.pointer()] = args[args.length - 1];
