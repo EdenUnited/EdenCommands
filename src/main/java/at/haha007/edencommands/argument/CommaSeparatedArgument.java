@@ -8,14 +8,18 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CommaSeparatedArgument<T> extends Argument<List<T>> {
     private final Argument<T> argument;
+    private final boolean distinct;
 
-    public CommaSeparatedArgument(Argument<T> argument) {
-        super(new CommaSeparatedTabCompleter<>(argument)::apply, false);
+    public CommaSeparatedArgument(Argument<T> argument, boolean distinct) {
+        super(new CommaSeparatedTabCompleter<>(argument, distinct)::tabComplete, false);
         this.argument = argument;
+        this.distinct = distinct;
     }
 
     @Override
@@ -29,21 +33,24 @@ public class CommaSeparatedArgument<T> extends Argument<List<T>> {
                 throw new IllegalStateException("The CommaSeparatedArgument is only applicable to Arguments with 1 pointer increment!");
             list.add(parsedT.result());
         }
-        return new ParsedArgument<>(list, 1);
+
+        return new ParsedArgument<>(distinct ? list.stream().distinct().toList() : list, 1);
     }
 
-    private record CommaSeparatedTabCompleter<T>(Argument<T> argument) {
-        public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
+    private record CommaSeparatedTabCompleter<T>(Argument<T> argument, boolean distinct) {
+        public List<AsyncTabCompleteEvent.Completion> tabComplete(CommandContext context) {
             String key = context.input()[context.pointer()];
-            if (key.endsWith(",")) key = key + " ";
-            String[] args = key.split(",");
-            args[args.length - 1] = args[args.length - 1].trim();
+            String[] args = key.split(",", -1);
+            Set<String> blocked = Arrays.stream(args).map(String::toLowerCase).collect(Collectors.toSet());
             String argsStr = String.join(",", Arrays.copyOfRange(args, 0, args.length - 1));
             String start = argsStr.length() > 0 ? argsStr + "," : argsStr;
             context.input()[context.pointer()] = args[args.length - 1];
             List<AsyncTabCompleteEvent.Completion> completions = argument.tabComplete(context);
-            return completions.stream()
-                    .map(c -> AsyncTabCompleteEvent.Completion.completion(start + c.suggestion(), c.tooltip()))
+            Stream<AsyncTabCompleteEvent.Completion> stream = completions.stream();
+            if (distinct) {
+                stream = stream.filter(s -> !blocked.contains(s.suggestion().toLowerCase()));
+            }
+            return stream.map(c -> AsyncTabCompleteEvent.Completion.completion(start + c.suggestion(), c.tooltip()))
                     .collect(Collectors.toList());
         }
     }
