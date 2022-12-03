@@ -2,6 +2,7 @@ package at.haha007.edencommands;
 
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.tree.ArgumentCommandNode;
+import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.InternalContext;
 import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
@@ -22,18 +23,30 @@ public class CommandRegistry implements Listener {
     private final Map<String, NodeCommand> registeredCommands = new HashMap<>();
     private final Plugin plugin;
 
-    public CommandRegistry(Plugin plugin) {
+    /**
+     * @param plugin the plugin which to register the commands for.
+     *               used to create the plugin-aliased command - "/plugin:command"
+     */
+    public CommandRegistry(@NotNull Plugin plugin) {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
+    /**
+     * Unregister all commands and the listener of this class.
+     */
     public void destroy() {
         registeredCommands.values().forEach(c -> Bukkit.getCommandMap().getKnownCommands().values().remove(c));
         registeredCommands.clear();
         HandlerList.unregisterAll(this);
     }
 
-    public void register(LiteralCommandNode node) {
+    /**
+     * Register a new Command
+     *
+     * @param node the @{@link LiteralCommandNode} that should be registered
+     */
+    public void register(@NotNull LiteralCommandNode node) {
         String literal = node.literal().toLowerCase();
         if (registeredCommands.containsKey(literal)) {
             throw new IllegalArgumentException("Already registered command with the key <%s>".formatted(literal));
@@ -69,15 +82,34 @@ public class CommandRegistry implements Listener {
         event.completions(completions);
     }
 
-    public static LiteralCommandNode.LiteralCommandBuilder literal(String key) {
+    /**
+     * Alternative to calling LiteralCommandNode.builder(key)
+     *
+     * @param key the literal
+     * @return a new LiteralCommandBuilder
+     */
+    public static LiteralCommandNode.LiteralCommandBuilder literal(@NotNull String key) {
         return LiteralCommandNode.builder(key);
     }
 
-    public static <T> ArgumentCommandNode.ArgumentCommandBuilder<T> argument(String key, Argument<T> argument) {
+    /**
+     * Alternative to calling ArgumentCommandNode.builder(key)
+     *
+     * @param key      the key to access the parsed value from the CommandContext
+     * @param argument the argument that should be parsed
+     * @return a new ArgumentCommandBuilder
+     */
+    public static <T> ArgumentCommandNode.ArgumentCommandBuilder<T> argument(@NotNull String key, @NotNull Argument<T> argument) {
         return ArgumentCommandNode.builder(key, argument);
     }
 
-    public static Predicate<CommandSender> permission(String permission) {
+    /**
+     * Returns a permission filter to be used with CommandBuilder.requires()
+     *
+     * @param permission the permission key
+     * @return A new @{@link Predicate<CommandSender>}
+     */
+    public static Predicate<CommandSender> permission(@NotNull String permission) {
         return new PermissionRequirement(permission);
     }
 

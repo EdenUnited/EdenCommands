@@ -22,7 +22,11 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
     @Nullable
     private final Component tooltip;
 
-    public static LiteralCommandBuilder builder(String literal) {
+    /**
+     * @param literal the literal
+     * @return a new @{@link LiteralCommandBuilder}
+     */
+    public static LiteralCommandBuilder builder(@NotNull String literal) {
         return new LiteralCommandBuilder(literal);
     }
 
@@ -72,6 +76,9 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
             this.literal = literal;
         }
 
+        /**
+         * @return a clone of this instance
+         */
         @NotNull
         public LiteralCommandBuilder clone() {
             LiteralCommandBuilder clone = new LiteralCommandBuilder(literal);
@@ -83,36 +90,62 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
             return clone;
         }
 
+        /**
+         * "/command subcommand"
+         *     ^          ^
+         *   parent     child
+         * @param child A Child command under the current one
+         * @return this
+         */
         @NotNull
         public LiteralCommandBuilder then(@NotNull CommandBuilder<?> child) {
             children.add(child);
             return this;
         }
 
+        /**
+         * @param executor the @{@link CommandExecutor} that should be run when the command is run
+         * @return this
+         */
         @NotNull
         public LiteralCommandBuilder executor(@NotNull CommandExecutor executor) {
             this.executor = executor;
             return this;
         }
 
+        /**
+         * @param requirement A condition that has to match to execute the command. ie: permissions, gamemode
+         * @return this
+         */
         @NotNull
         public LiteralCommandBuilder requires(@NotNull Predicate<CommandSender> requirement) {
             requirements.add(requirement);
             return this;
         }
 
+        /**
+         * @param usage the Usage text that shows when the command failed
+         * @return this
+         */
         @NotNull
         public LiteralCommandBuilder usageText(@NotNull Component usage) {
             usageText = usage;
             return this;
         }
 
+        /**
+         * @param tooltip the tooltip that hovers over the argument when you hover over it
+         * @return this
+         */
         @NotNull
         public LiteralCommandBuilder tooltip(@NotNull Component tooltip) {
             this.tooltip = tooltip;
             return this;
         }
 
+        /**
+         * @return a new @{@link LiteralCommandNode}
+         */
         @NotNull
         public LiteralCommandNode build() {
             Predicate<CommandSender> requirement = c -> true;

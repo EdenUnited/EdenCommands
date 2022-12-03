@@ -23,6 +23,11 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
     @Getter
     private final Argument<T> argument;
 
+    /**
+     * @param key the key the access the parsed argument from the @{@link at.haha007.edencommands.CommandContext}
+     * @param argument the @{@link Argument} to parse and tab-complete part of the command
+     * @return a new @{@link ArgumentCommandBuilder}
+     */
     public static <T> ArgumentCommandBuilder<T> builder(String key, Argument<T> argument) {
         return new ArgumentCommandBuilder<>(argument, key);
     }
@@ -77,11 +82,14 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
         @NotNull
         private final String key;
 
-        public ArgumentCommandBuilder(@NotNull Argument<T> argument, @NotNull String key) {
+        private ArgumentCommandBuilder(@NotNull Argument<T> argument, @NotNull String key) {
             this.argument = argument;
             this.key = key;
         }
 
+        /**
+         * @return a clone of this instance
+         */
         @NotNull
         public ArgumentCommandBuilder<T> clone() {
             ArgumentCommandBuilder<T> clone = new ArgumentCommandBuilder<>(argument, key);
@@ -92,31 +100,52 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
             return clone;
         }
 
-
+        /**
+         * "/command subcommand"
+         *     ^          ^
+         *   parent     child
+         * @param child A Child command under the current one
+         * @return this
+         */
         @NotNull
         public ArgumentCommandBuilder<T> then(@NotNull CommandBuilder<?> child) {
             children.add(child);
             return this;
         }
 
+        /**
+         * @param executor the @{@link CommandExecutor} that should be run when the command is run
+         * @return this
+         */
         @NotNull
         public ArgumentCommandBuilder<T> executor(@NotNull CommandExecutor executor) {
             this.executor = executor;
             return this;
         }
 
+        /**
+         * @param requirement A condition that has to match to execute the command. ie: permissions, gamemode
+         * @return this
+         */
         @NotNull
         public ArgumentCommandBuilder<T> requires(@NotNull Predicate<CommandSender> requirement) {
             requirements.add(requirement);
             return this;
         }
 
+        /**
+         * @param usage the Usage text that shows when the command failed
+         * @return this
+         */
         @NotNull
         public ArgumentCommandBuilder<T> usageText(@NotNull Component usage) {
             usageText = usage;
             return this;
         }
 
+        /**
+         * @return a new @{@link ArgumentCommandNode}
+         */
         @NotNull
         public CommandNode<?> build() {
             Predicate<CommandSender> requirement = c -> true;

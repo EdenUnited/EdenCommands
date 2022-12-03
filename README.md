@@ -9,13 +9,14 @@ There are 2 basic variations of CommandNodes, the LiteralCommandNode and the Arg
 The root node has to be a `LiteralCommandNode`.
 
 #### Literals
+
 ```java
 class MyPlugin extends JavaPlugin {
     public void onEnable() {
         //creating a command node
         CommandRegistry registry = new CommandRegistry(this);
 
-        LiteralCommandNode node = LiteralCommandNode("mycommand");
+        LiteralCommandNode.LiteralCommandBuilder node = LiteralCommandNode.builder("mycommand");
 
         node.executor(context -> {
             CommandSender sender = context.sender();
@@ -27,73 +28,37 @@ class MyPlugin extends JavaPlugin {
         node.then(CommandRegistry.literal("subcommand").executor(c -> c.sender().sendMessage("subcommand executed")));
 
         //register it
-        CommandRegistry.register(node);
+        registry.register(node.build());
     }
 }
 ```
 
 #### Arguments
+
 ```java
 class MyPlugin extends JavaPlugin {
     public void onEnable() {
         CommandRegistry registry = new CommandRegistry(this);
-        CommandNode node = new LiteralCommandNode("mycommand");
+        LiteralCommandNode.LiteralCommandBuilder node = CommandRegistry.literal("mycommand");
 
-        ArgumentCommandNode<Integer> argument = new ArgumentCommandNode<>(
+        ArgumentCommandNode.ArgumentCommandBuilder<Integer > argument = CommandRegistry.argument(
                 "key",
-                IntegerArgument.integer(0, 10, Component.text("You have to supply an integer between 0 and 10!"))
+                IntegerArgument.builder()
+                        .filter(new IntegerArgument.MinimumFilter(Component.text("The argument must be positive!"), 0))
+                        .filter(new IntegerArgument.MaximumFilter(Component.text("The argument is caped at 10!"), 0))
+                        .build()
         );
-        argument.executes(context -> {
+        argument.executor(context -> {
             Integer number = context.parameter("key");
-            context.getSender().sendMessage(number.toString());
+            context.sender().sendMessage(number.toString());
         });
-        
+
         node.then(argument);
 
         registry.register(node);
     }
 }
 ```
-
-### Brigadier
-Register the root object via ``BrigadierCommandRegistry.register(object)``.
-
-```java
-class MyPlugin extends JavaPlugin {
-    public void onEnable() {
-        BrigadierCommandRegistry registry = new BrigadierCommandRegistry(this);
-
-        //creating a command node
-        LiteralArgumentBuilder<Player> command = registry.literal("mycommand");
-        command.executes(cmd -> 1);
-        command.requires(p -> p.hasPermission("myplugin.mycommand"));
-
-        //adding a subcommand -> /mycommand subcommand
-        LiteralArgumentBuilder<Player> subcommand = registry.literal("subcommand");
-        command.then(subcommand);
-
-        //register it
-        registry.register(node);
-    }
-}
-```
-
-```java
-class MyPlugin extends JavaPlugin {
-    public void onEnable() {
-        BrigadierCommandRegistry registry = new BrigadierCommandRegistry(this);
-        LiteralArgumentBuilder<Player> node = registry.literal("mycommand");
-        RequiredArgumentBuilder<Player, Integer> argument = registry.argument("key", IntegerArgumentType.integer(0, 10));
-        argument.executes(cmd -> {
-            Integer number = cmd.getArgument("key", Integer.class);
-            cmd.getSource().sendMessage(number.toString());
-            return 1;
-        });
-        node.then(argument);
-    }
-}
-```
-
 
 ## Maven
 ```xml
@@ -106,7 +71,7 @@ class MyPlugin extends JavaPlugin {
 <dependency>
     <groupId>com.github.EdenUnited</groupId>
     <artifactId>EdenCommands</artifactId>
-    <version>2.2</version>
+    <version>2.3</version>
 </dependency>
 ```
 
@@ -118,6 +83,6 @@ repositories {
 ```
 ```
 dependencies {
-    implementation 'com.github.EdenUnited:EdenCommands:2.2'
+    implementation 'com.github.EdenUnited:EdenCommands:2.3'
 }
 ```
