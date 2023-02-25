@@ -2,10 +2,11 @@ package at.haha007.edencommands;
 
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.tree.ArgumentCommandNode;
-import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.InternalContext;
 import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,6 +17,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CommandRegistry implements Listener {
@@ -51,7 +53,7 @@ public class CommandRegistry implements Listener {
         if (registeredCommands.containsKey(literal)) {
             throw new IllegalArgumentException("Already registered command with the key <%s>".formatted(literal));
         }
-        NodeCommand command = new NodeCommand(node);
+        NodeCommand command = new AsyncNodeCommand(node);
         registeredCommands.put(literal.toLowerCase(), command);
         Bukkit.getCommandMap().register(plugin.getName(), command);
     }
@@ -75,9 +77,8 @@ public class CommandRegistry implements Listener {
 
         NodeCommand command = registeredCommands.get(args[0].toLowerCase());
         if (command == null) return;
-        List<AsyncTabCompleteEvent.Completion> completions = command.rootNode().tabComplete(new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>()));
-        if (completions == null)
-            completions = List.of();
+        var context = new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>());
+        var completions = command.tabCompleter().apply(context);
         completions = completions.stream().distinct().sorted(Comparator.comparing(AsyncTabCompleteEvent.Completion::suggestion)).toList();
         event.completions(completions);
     }
@@ -119,12 +120,32 @@ public class CommandRegistry implements Listener {
         }
     }
 
-    private class NodeCommand extends Command {
-        private final LiteralCommandNode rootNode;
+    private abstract static class NodeCommand extends Command {
+        @Getter
+        @Accessors(fluent = true)
+        protected final LiteralCommandNode rootNode;
 
-        private NodeCommand(LiteralCommandNode node) {
-            super(node.literal().toLowerCase());
-            rootNode = node;
+        private NodeCommand(LiteralCommandNode rootNode) {
+            super(rootNode.literal().toLowerCase());
+            this.rootNode = rootNode;
+        }
+
+        @NotNull
+        public abstract Function<InternalContext, @NotNull List<AsyncTabCompleteEvent.Completion>> tabCompleter();
+    }
+
+    private class AsyncNodeCommand extends NodeCommand {
+        private AsyncNodeCommand(LiteralCommandNode node) {
+            super(node);
+        }
+
+        @Override
+        @NotNull
+        public Function<InternalContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter() {
+            return context -> {
+                var completions = rootNode.tabComplete(context);
+                return completions == null ? List.of() : completions;
+            };
         }
 
         public boolean execute(@NotNull CommandSender sender, @NotNull String label, String[] args) {
@@ -140,13 +161,10 @@ public class CommandRegistry implements Listener {
             return rootNode.testRequirement(target);
         }
 
-        public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args)
+        @NotNull
+        public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args)
                 throws IllegalArgumentException {
             return List.of();
-        }
-
-        public LiteralCommandNode rootNode() {
-            return rootNode;
         }
     }
 }
