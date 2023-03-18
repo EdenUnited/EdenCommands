@@ -2,8 +2,6 @@ package at.haha007.edencommands.tree;
 
 import at.haha007.edencommands.CommandExecutor;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -14,8 +12,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Getter
-@Accessors(fluent = true)
 public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
     @NotNull
     private final String literal;
@@ -61,6 +57,14 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
 
     private boolean startsWith(String literal, String start) {
         return literal.toLowerCase().startsWith(start.toLowerCase());
+    }
+
+    public @NotNull String literal() {
+        return this.literal;
+    }
+
+    public @Nullable Component tooltip() {
+        return this.tooltip;
     }
 
     public static class LiteralCommandBuilder implements CommandBuilder<LiteralCommandBuilder> {

@@ -3,7 +3,6 @@ package at.haha007.edencommands.argument;
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -47,13 +46,10 @@ public class EnumArgument<T extends Enum<T>> extends Argument<T> {
     }
 
 
-    @AllArgsConstructor
-    private static class TabCompleter<T extends Enum<T>> implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
-        private final Class<T> clazz;
-        @NotNull
-        private final Function<T, Component> tooltipProvider;
-        @NotNull
-        private final List<Filter<T>> filters;
+    private record TabCompleter<T extends Enum<T>>(@NotNull Class<T> clazz,
+                                                   @NotNull Function<T, Component> tooltipProvider,
+                                                   @NotNull List<Filter<T>> filters)
+            implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             List<AsyncTabCompleteEvent.Completion> list = new ArrayList<>();

@@ -5,8 +5,6 @@ import at.haha007.edencommands.CommandExecutor;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -16,11 +14,9 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Accessors(fluent = true)
 public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNode<T>> {
     @NotNull
     private final String key;
-    @Getter
     private final Argument<T> argument;
 
     /**
@@ -70,6 +66,10 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
             e.sendErrorMessage(context.sender());
             return true;
         }
+    }
+
+    public Argument<T> argument() {
+        return this.argument;
     }
 
     public static final class ArgumentCommandBuilder<T> implements CommandBuilder<ArgumentCommandBuilder<T>> {

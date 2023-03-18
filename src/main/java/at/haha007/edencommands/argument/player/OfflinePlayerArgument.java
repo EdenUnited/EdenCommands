@@ -5,7 +5,6 @@ import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Builder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.TriState;
 import org.bukkit.Bukkit;
@@ -16,6 +15,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -27,14 +27,17 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
     @NotNull
     private final Function<String, Component> playerNotFoundErrorProvider;
 
-    @Builder
-    private OfflinePlayerArgument(Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter,
-                                  TriState filterByName,
-                                  Function<String, Component> playerNotFoundErrorProvider) {
+    private OfflinePlayerArgument(@Nullable Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter,
+                                  @Nullable TriState filterByName,
+                                  @Nullable Function<String, Component> playerNotFoundErrorProvider) {
         super(tabCompleter == null ? new TabCompleter() : tabCompleter, filterByName == null || filterByName.toBooleanOrElse(true));
         if (playerNotFoundErrorProvider == null)
             playerNotFoundErrorProvider = s -> Component.text("Player not found: <%s>!".formatted(s));
         this.playerNotFoundErrorProvider = playerNotFoundErrorProvider;
+    }
+
+    public static OfflinePlayerArgumentBuilder builder() {
+        return new OfflinePlayerArgumentBuilder();
     }
 
     public @NotNull ParsedArgument<OfflinePlayer> parse(CommandContext context) throws CommandException {
@@ -86,6 +89,38 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
             completions = new ArrayList<>(completions);
             completions.addAll(List.of("@p", "@r", "@s"));
             return completions.stream().map(AsyncTabCompleteEvent.Completion::completion).collect(Collectors.toList());
+        }
+    }
+
+    public static class OfflinePlayerArgumentBuilder {
+        private Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter;
+        private TriState filterByName;
+        private Function<String, Component> playerNotFoundErrorProvider;
+
+        OfflinePlayerArgumentBuilder() {
+        }
+
+        public OfflinePlayerArgumentBuilder tabCompleter(Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter) {
+            this.tabCompleter = tabCompleter;
+            return this;
+        }
+
+        public OfflinePlayerArgumentBuilder filterByName(TriState filterByName) {
+            this.filterByName = filterByName;
+            return this;
+        }
+
+        public OfflinePlayerArgumentBuilder playerNotFoundErrorProvider(Function<String, Component> playerNotFoundErrorProvider) {
+            this.playerNotFoundErrorProvider = playerNotFoundErrorProvider;
+            return this;
+        }
+
+        public OfflinePlayerArgument build() {
+            return new OfflinePlayerArgument(tabCompleter, filterByName, playerNotFoundErrorProvider);
+        }
+
+        public String toString() {
+            return "OfflinePlayerArgument.OfflinePlayerArgumentBuilder(tabCompleter=" + this.tabCompleter + ", filterByName=" + this.filterByName + ", playerNotFoundErrorProvider=" + this.playerNotFoundErrorProvider + ")";
         }
     }
 }

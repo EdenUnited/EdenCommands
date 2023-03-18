@@ -3,8 +3,6 @@ package at.haha007.edencommands.tree;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -13,8 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-@Accessors(fluent = true)
-@EqualsAndHashCode
 abstract class CommandNode<T extends CommandNode<T>> {
     private static final CommandExecutor defaultExecutor = c -> {
     };
@@ -77,5 +73,42 @@ abstract class CommandNode<T extends CommandNode<T>> {
         if (usageText == null) return false;
         sender.sendMessage(usageText);
         return true;
+    }
+
+    public boolean equals(final Object o) {
+        if (o == this) return true;
+        if (!(o instanceof final CommandNode<?> other)) return false;
+        if (!other.canEqual(this)) return false;
+        final Object this$children = this.children;
+        final Object other$children = other.children;
+        if (!Objects.equals(this$children, other$children)) return false;
+        final Object this$executor = this.executor;
+        final Object other$executor = other.executor;
+        if (!Objects.equals(this$executor, other$executor)) return false;
+        final Object this$requirement = this.requirement;
+        final Object other$requirement = other.requirement;
+        if (!Objects.equals(this$requirement, other$requirement))
+            return false;
+        final Object this$usageText = this.usageText;
+        final Object other$usageText = other.usageText;
+        return Objects.equals(this$usageText, other$usageText);
+    }
+
+    protected boolean canEqual(final Object other) {
+        return other instanceof CommandNode;
+    }
+
+    public int hashCode() {
+        final int PRIME = 59;
+        int result = 1;
+        final Object $children = this.children;
+        result = result * PRIME + ($children == null ? 43 : $children.hashCode());
+        final Object $executor = this.executor;
+        result = result * PRIME + ($executor == null ? 43 : $executor.hashCode());
+        final Object $requirement = this.requirement;
+        result = result * PRIME + ($requirement == null ? 43 : $requirement.hashCode());
+        final Object $usageText = this.usageText;
+        result = result * PRIME + ($usageText == null ? 43 : $usageText.hashCode());
+        return result;
     }
 }

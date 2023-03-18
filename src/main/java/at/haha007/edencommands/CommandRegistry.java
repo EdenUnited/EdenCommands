@@ -5,8 +5,6 @@ import at.haha007.edencommands.tree.ArgumentCommandNode;
 import at.haha007.edencommands.tree.InternalContext;
 import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -121,8 +119,6 @@ public class CommandRegistry implements Listener {
     }
 
     private abstract static class NodeCommand extends Command {
-        @Getter
-        @Accessors(fluent = true)
         protected final LiteralCommandNode rootNode;
 
         private NodeCommand(LiteralCommandNode rootNode) {
