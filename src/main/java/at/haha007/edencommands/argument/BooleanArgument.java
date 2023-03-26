@@ -66,7 +66,7 @@ public class BooleanArgument extends Argument<Boolean> {
         BooleanArgumentBuilder() {
         }
 
-        public BooleanArgumentBuilder notBooleanError(Function<String, Component> notBooleanError) {
+        public BooleanArgumentBuilder notBooleanMessage(Function<String, Component> notBooleanError) {
             this.notBooleanError = notBooleanError;
             return this;
         }

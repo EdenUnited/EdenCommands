@@ -67,6 +67,14 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
         return this.tooltip;
     }
 
+    @Override
+    public String toString() {
+        return "LiteralCommandNode{" +
+                "literal='" + literal + '\'' +
+                ", tooltip=" + tooltip +
+                "} " + super.toString();
+    }
+
     public static class LiteralCommandBuilder implements CommandBuilder<LiteralCommandBuilder> {
         private final List<CommandBuilder<?>> children = new ArrayList<>();
         private final List<Predicate<CommandSender>> requirements = new ArrayList<>();

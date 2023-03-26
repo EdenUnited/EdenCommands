@@ -99,6 +99,32 @@ public class FloatArgument extends Argument<Float> {
     }
 
     /**
+     * Filters values by a minimum, Smaller values can't be parsed
+     */
+    @NotNull
+    public static class RangeFilter implements Filter<Float> {
+        private final Component error;
+        private final float min;
+        private final float max;
+
+        public RangeFilter(Component error, float min, float max) {
+            this.error = error;
+            this.min = min;
+            this.max = max;
+        }
+
+        public Component check(CommandSender sender, Float f) {
+            if(f.isNaN())
+                return error;
+            if (f < min)
+                return error;
+            if (f > max)
+                return error;
+            return null;
+        }
+    }
+
+    /**
      * Filters values by a maximum, Larger values can't be parsed
      */
     @NotNull

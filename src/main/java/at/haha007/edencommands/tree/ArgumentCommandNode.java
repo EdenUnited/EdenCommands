@@ -72,6 +72,14 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
         return this.argument;
     }
 
+    @Override
+    public String toString() {
+        return "ArgumentCommandNode{" +
+                "key='" + key + '\'' +
+                ", argument=" + argument +
+                "} " + super.toString();
+    }
+
     public static final class ArgumentCommandBuilder<T> implements CommandBuilder<ArgumentCommandBuilder<T>> {
         private final List<CommandBuilder<?>> children = new ArrayList<>();
         private final List<Predicate<CommandSender>> requirements = new ArrayList<>();

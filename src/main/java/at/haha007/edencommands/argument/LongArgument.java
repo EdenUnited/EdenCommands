@@ -96,6 +96,30 @@ public class LongArgument extends Argument<Long> {
     }
 
     /**
+     * Filters values by a minimum, Smaller values can't be parsed
+     */
+    @NotNull
+    public static class RangeFilter implements Filter<Long> {
+        private final Component error;
+        private final float min;
+        private final float max;
+
+        public RangeFilter(Component error, long min, long max) {
+            this.error = error;
+            this.min = min;
+            this.max = max;
+        }
+
+        public Component check(CommandSender sender, Long l) {
+            if (l < min)
+                return error;
+            if (l > max)
+                return error;
+            return null;
+        }
+    }
+
+    /**
      * Filters values by a maximum, Larger values can't be parsed
      */
     @NotNull

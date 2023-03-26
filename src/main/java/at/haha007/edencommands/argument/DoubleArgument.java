@@ -99,6 +99,32 @@ public class DoubleArgument extends Argument<Double> {
     }
 
     /**
+     * Filters values by a minimum, Smaller values can't be parsed
+     */
+    @NotNull
+    public static class RangeFilter implements Filter<Double> {
+        private final Component error;
+        private final double min;
+        private final double max;
+
+        public RangeFilter(Component error, double min, double max) {
+            this.error = error;
+            this.min = min;
+            this.max = max;
+        }
+
+        public Component check(CommandSender sender, Double d) {
+            if (d.isNaN())
+                return error;
+            if (d < min)
+                return error;
+            if (d > max)
+                return error;
+            return null;
+        }
+    }
+
+    /**
      * Filters values by a maximum, Larger values can't be parsed
      */
     @NotNull

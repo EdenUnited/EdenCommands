@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class CommandTreeTest {
+public class CommandNodeTest {
     private final CommandSender sender = Mockito.mock(CommandSender.class);
 
     @Test
