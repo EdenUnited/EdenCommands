@@ -2,6 +2,7 @@ package at.haha007.edencommands.annotations;
 
 import at.haha007.edencommands.CommandExecutor;
 import at.haha007.edencommands.CommandRegistry;
+import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.tree.ArgumentCommandNode;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.LiteralCommandNode;
@@ -74,12 +75,15 @@ class CommandTree {
         child.add(toParse, executor);
     }
 
-    CommandBuilder<?> asCommand(ArgumentParserProvider argumentParser) {
+    CommandBuilder<?> asCommand(ArgumentParserProvider argumentParser) throws ParseException {
         CommandBuilder<?> node;
         if (params.get("type").equalsIgnoreCase("literal")) {
             node = LiteralCommandNode.builder(key);
         } else {
-            node = ArgumentCommandNode.builder(key, argumentParser.parse(params));
+            Argument<?> argument = argumentParser.parse(params);
+            if (argument == null)
+                throw new ParseException("ArgumentParser for type " + params.get("type") + " not found!", 0);
+            node = ArgumentCommandNode.builder(key, argument);
         }
         if (params.containsKey("usage"))
             node.usageText(MiniMessage.miniMessage().deserialize(params.get("usage")));
@@ -96,15 +100,22 @@ class CommandTree {
     }
 
     List<CommandBuilder<?>> getChildCommands(ArgumentParserProvider argumentParser) {
-        return children.stream().map(c -> c.asCommand(argumentParser)).collect(Collectors.toList());
+        return children.stream().map(c -> {
+            try {
+                return c.asCommand(argumentParser);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Override
     public String toString() {
         return "CommandTree{" +
                 "children=" + children +
-                ", value='" + value + '\'' +
-                ", key='" + key + '\'' +
+                ", value=" + value +
+                ", key=" + key +
                 ", params=" + params +
                 ", executor=" + executor +
                 '}';
@@ -129,6 +140,9 @@ class CommandTree {
             } catch (IndexOutOfBoundsException e) {
                 throw new ParseException(toParse, toParse.length());
             }
+            boolean hasType = params.stream().map(param -> param.key().value()).anyMatch(s -> s.equalsIgnoreCase("type"));
+            if (!hasType)
+                params.add(new Param(new Name("type", 0), new Name("literal", 0), 0));
             return new ParamList(List.copyOf(params), len + 2);
         }
 

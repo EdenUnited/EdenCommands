@@ -37,7 +37,7 @@ public abstract class CommandNode<T extends CommandNode<T>> {
         return requirement.test(sender);
     }
 
-    public boolean execute(InternalContext context) {
+    public boolean execute(InternalContext context) throws CommandException {
         if (!testRequirement(context.sender()))
             return false;
         if (!context.hasNext()) {
@@ -45,17 +45,26 @@ public abstract class CommandNode<T extends CommandNode<T>> {
                 executor.execute(context.context());
                 return true;
             } catch (CommandException e) {
-                e.sendErrorMessage(context.sender());
-                return true;
+                throw e;
             } catch (Throwable e) {
                 e.printStackTrace();
                 return sendUsageText(context.sender());
             }
         }
+
+        CommandException exception = null;
         for (CommandNode<?> child : children) {
-            if (child.execute(context.next()))
-                return true;
+            try {
+                if (child.execute(context.next())) {
+                    return true;
+                }
+            } catch (CommandException e) {
+                exception = e;
+            }
         }
+        if (exception != null)
+            throw exception;
+
         return sendUsageText(context.sender());
     }
 

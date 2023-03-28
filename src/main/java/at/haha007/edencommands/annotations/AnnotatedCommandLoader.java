@@ -32,30 +32,30 @@ public class AnnotatedCommandLoader {
     }
 
     public void addAnnotated(Object obj) {
-        for (Method method : obj.getClass().getDeclaredMethods()) {
-            Command cmd = method.getDeclaredAnnotation(Command.class);
-            String command = getAnnotationValue(method);
-            if (cmd == null || command == null)
-                continue;
-            method.setAccessible(true);
-            CommandExecutor executor = new MethodCommandExecutor(obj, method);
-            if (cmd.sync())
-                executor = new SyncCommandExecutor(executor, plugin);
-            this.root.add(command, executor);
-        }
+        Arrays.stream(obj.getClass().getDeclaredMethods()).forEach(method -> addAnnotatedSilent(method, obj));
     }
 
-    public void addAnnotated(Method method) {
-        Command cmd = method.getDeclaredAnnotation(Command.class);
+    public void addAnnotated(Method method, Object obj) {
+        if (method.getDeclaringClass() != obj.getClass()) {
+            throw new IllegalArgumentException("Method is not declared in the given object!");
+        }
         String command = getAnnotationValue(method);
-        if (cmd == null || command == null) {
+        if (command == null) {
             throw new IllegalArgumentException("Method is not annotated with @Command!");
         }
+        boolean sync = getAnnotationSync(method);
         method.setAccessible(true);
-        CommandExecutor executor = new MethodCommandExecutor(null, method);
-        if (cmd.sync())
+        CommandExecutor executor = new MethodCommandExecutor(obj, method);
+        if (sync)
             executor = new SyncCommandExecutor(executor, plugin);
         this.root.add(command, executor);
+    }
+
+    private void addAnnotatedSilent(Method method, Object obj) {
+        try {
+            addAnnotated(method, obj);
+        } catch (IllegalArgumentException ignored) {
+        }
     }
 
     public void register(CommandRegistry registry) {
@@ -67,18 +67,28 @@ public class AnnotatedCommandLoader {
         }
     }
 
+    private boolean getAnnotationSync(Method method) {
+
+        return method.isAnnotationPresent(SyncCommand.class)
+                || method.getDeclaringClass().isAnnotationPresent(SyncCommand.class);
+    }
+
     private String getAnnotationValue(Method method) {
         String root = Optional.ofNullable(method.getDeclaringClass().getDeclaredAnnotation(CommandList.class))
                 .map(CommandList::value).stream()
                 .flatMap(Arrays::stream)
                 .map(Command::value)
                 .collect(Collectors.joining(" "));
-        String sub = Optional.ofNullable(method.getDeclaredAnnotation(Command.class))
+        if (root.isBlank()) root = Optional.ofNullable(method.getDeclaringClass().getDeclaredAnnotation(Command.class))
+                .map(Command::value).orElse("");
+        String sub = Optional.ofNullable(method.getDeclaredAnnotation(CommandList.class))
+                .map(CommandList::value).stream()
+                .flatMap(Arrays::stream)
                 .map(Command::value)
-                .orElse(null);
-        if (sub == null) {
-            return null;
-        }
+                .collect(Collectors.joining(" "));
+        if (sub.isBlank()) sub = Optional.ofNullable(method.getDeclaredAnnotation(Command.class))
+                .map(Command::value).orElse("");
+        if (sub.isBlank()) return null;
         return root + " " + sub;
     }
 }

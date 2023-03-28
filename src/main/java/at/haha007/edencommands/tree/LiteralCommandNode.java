@@ -1,5 +1,6 @@
 package at.haha007.edencommands.tree;
 
+import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import net.kyori.adventure.text.Component;
@@ -49,7 +50,7 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
         return List.of();
     }
 
-    public boolean execute(InternalContext context) {
+    public boolean execute(InternalContext context) throws CommandException {
         if (!context.current().equalsIgnoreCase(literal))
             return false;
         return super.execute(context);

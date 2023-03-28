@@ -28,14 +28,14 @@ public class EnumArgumentParser<T extends Enum<T>> implements ArgumentParser<Enu
     public static EnumArgumentParser<Material> blockMaterialParser() {
         return builder(Material.class)
                 .defaultTooltipProvider(m -> Component.translatable(m.translationKey()))
-                .defaultFilter((s, t) -> t.isBlock() ? null : Component.text("Material is not a block!"))
+                .defaultFilter((s, t) -> t.isBlock() && !t.isLegacy() ? null : Component.text("Material is not a block!"))
                 .build();
     }
 
     public static EnumArgumentParser<Material> itemMaterialParser() {
         return builder(Material.class)
                 .defaultTooltipProvider(m -> Component.translatable(m.translationKey()))
-                .defaultFilter((s, t) -> t.isItem() ? null : Component.text("Material is not an item!"))
+                .defaultFilter((s, t) -> t.isItem() && !t.isLegacy() ? null : Component.text("Material is not an item!"))
                 .build();
     }
 
@@ -55,15 +55,15 @@ public class EnumArgumentParser<T extends Enum<T>> implements ArgumentParser<Enu
         this.defaultFilter = defaultFilter;
         this.filterMap = Map.copyOf(filterMap);
         this.defaultTooltipProvider = defaultTooltipProvider;
-        this.tooltipProvider = tooltipProvider;
+        this.tooltipProvider = Map.copyOf(tooltipProvider);
     }
 
     public EnumArgument<T> parse(Map<String, String> params) {
         EnumArgument.EnumArgumentBuilder<T> builder = EnumArgument.builder(enumClass);
         String filter = params.get("filter");
-        builder.filter(filterMap.getOrDefault(filter, defaultFilter));
+        builder.filter(filter == null ? defaultFilter : filterMap.getOrDefault(filter, defaultFilter));
         String tooltip = params.get("tooltip");
-        builder.tooltipProvider(tooltipProvider.getOrDefault(tooltip, defaultTooltipProvider));
+        builder.tooltipProvider(tooltip == null ? defaultTooltipProvider : tooltipProvider.getOrDefault(tooltip, defaultTooltipProvider));
         String message = params.getOrDefault("error", "Unknown value: {0}");
         builder.errorMessage(c -> MiniMessage.miniMessage().deserialize(message.replace("{0}", c)));
         return builder.build();

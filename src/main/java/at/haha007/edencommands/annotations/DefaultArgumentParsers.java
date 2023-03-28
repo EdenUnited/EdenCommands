@@ -21,8 +21,8 @@ public enum DefaultArgumentParsers implements ArgumentParser<Argument<?>> {
     DOUBLE("double") {
         public Argument<?> parse(Map<String, String> params) {
             DoubleArgument.DoubleArgumentBuilder builder = DoubleArgument.builder();
-            if (params.containsKey("filter")) {
-                String filter = params.get("filter");
+            if (params.containsKey("range")) {
+                String filter = params.get("range");
                 double min = Double.parseDouble(filter.split(",")[0]);
                 double max = Double.parseDouble(filter.split(",")[1]);
                 if (min > max) {
@@ -48,8 +48,8 @@ public enum DefaultArgumentParsers implements ArgumentParser<Argument<?>> {
     FLOAT("float") {
         public Argument<?> parse(Map<String, String> params) {
             FloatArgument.FloatArgumentBuilder builder = FloatArgument.builder();
-            if (params.containsKey("filter")) {
-                String filter = params.get("filter");
+            if (params.containsKey("range")) {
+                String filter = params.get("range");
                 float min = Float.parseFloat(filter.split(",")[0]);
                 float max = Float.parseFloat(filter.split(",")[1]);
                 if (min > max) {
@@ -75,8 +75,8 @@ public enum DefaultArgumentParsers implements ArgumentParser<Argument<?>> {
     INTEGER("int") {
         public Argument<?> parse(Map<String, String> params) {
             IntegerArgument.IntegerArgumentBuilder builder = IntegerArgument.builder();
-            if (params.containsKey("filter")) {
-                String filter = params.get("filter");
+            if (params.containsKey("range")) {
+                String filter = params.get("range");
                 int min = Integer.parseInt(filter.split(",")[0]);
                 int max = Integer.parseInt(filter.split(",")[1]);
                 if (min > max) {
@@ -102,8 +102,8 @@ public enum DefaultArgumentParsers implements ArgumentParser<Argument<?>> {
     LONG("long") {
         public Argument<?> parse(Map<String, String> params) {
             LongArgument.LongArgumentBuilder builder = LongArgument.builder();
-            if (params.containsKey("filter")) {
-                String filter = params.get("filter");
+            if (params.containsKey("range")) {
+                String filter = params.get("range");
                 long min = Long.parseLong(filter.split(",")[0]);
                 long max = Long.parseLong(filter.split(",")[1]);
                 if (min > max) {

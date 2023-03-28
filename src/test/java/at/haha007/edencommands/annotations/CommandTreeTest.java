@@ -1,6 +1,7 @@
 package at.haha007.edencommands.annotations;
 
 import at.haha007.edencommands.CommandContext;
+import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.CommandNode;
 import at.haha007.edencommands.tree.InternalContext;
@@ -33,7 +34,7 @@ class CommandTreeTest {
     }
 
     @Test
-    void asCommand() {
+    void asCommand() throws CommandException {
         CommandSender mockSender = Mockito.mock(CommandSender.class);
 
         CommandTree tree = CommandTree.root();
@@ -73,7 +74,7 @@ class CommandTreeTest {
     }
 
     @Test
-    void arguments() {
+    void arguments() throws CommandException {
         CommandSender mockSender = Mockito.mock(CommandSender.class);
 
         CommandTree tree = CommandTree.root();
@@ -83,7 +84,7 @@ class CommandTreeTest {
 
         List<? extends CommandNode<?>> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
         for (CommandNode<?> command : commands) {
-            if (!(command instanceof LiteralCommandNode literalCommandNode)) {
+            if (!(command instanceof LiteralCommandNode)) {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }
             command.execute(new InternalContext(

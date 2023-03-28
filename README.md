@@ -68,7 +68,6 @@ Just load all classes with command executors with the `AnnotationCommandLoader` 
 You have to add the parsers for the arguments you want to use with `AnnotationCommandLoader#addArgumentParser`,
 the basics are included using the `AnnotationCommandLoader#addDefaultArgumentParsers` (boolean, double, float, int, long, offline_player, player, string).
 
-
 ```java
 @Command("mycommand")
 class MyPlugin extends JavaPlugin {
@@ -77,12 +76,13 @@ class MyPlugin extends JavaPlugin {
         AnnotatedCommandLoader loader = new AnnotatedCommandLoader(this);
         loader.addDefaultArgumentParsers();
         loader.addArgumentParser("item", EnumArgumentParser.itemMaterialParser());
+        loader.addArgumentParser("block", EnumArgumentParser.blockMaterialParser());
         loader.addAnnotated(this);
         loader.register(registry);
     }
 
     // -> /mycommand subcommand
-    @Command("subcommand")
+    @Command("subcommand{permission:'myplugin.mycommand.subcommand'}")
     public void subcommand(CommandContext context) {
         context.sender().sendMessage("subcommand executed");
     }
@@ -114,6 +114,27 @@ class MyPlugin extends JavaPlugin {
         Material material = context.parameter("item");
         int amount = context.parameter("amount");
         player.getInventory().addItem(new ItemStack(material, amount));
+    }
+
+    // -> /mycommand setblock 0 0 0
+    @Command("setblock{permission:'testcommands.setblock.xyz'}")
+    @Command("x{type:int,range:'-10,10',suggest:'-10,-5,5,10'}")
+    @Command("y{type:int,range:'-10,10',suggest:'-10,-5,5,10'}")
+    @Command("z{type:int,range:'-10,10',suggest:'-10,-5,5,10'}")
+    @SyncCommand
+    private void setblockY(CommandContext context) {
+        if (!(context.sender() instanceof Player player)) {
+            context.sender().sendMessage("You must be a player to use this command.");
+            return;
+        }
+        Random random = new Random();
+        var list = Arrays.stream(Material.values()).filter(Material::isBlock).toList();
+        var material = list.get(random.nextInt(list.size()));
+        int x = context.parameter("x");
+        int y = context.parameter("y");
+        int z = context.parameter("z");
+        Block block = player.getLocation().getBlock().getRelative(x, y, z);
+        block.setType(material);
     }
 }
 ```

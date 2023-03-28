@@ -8,6 +8,4 @@ import java.lang.annotation.*;
 public @interface Command {
     //acts as prefix if annotated in class
     String value();
-    //acts as default if annotated on class
-    boolean sync() default false;
 }

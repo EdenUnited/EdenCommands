@@ -148,8 +148,13 @@ public class CommandRegistry implements Listener {
             String[] input = new String[args.length + 1];
             input[0] = rootNode.literal();
             System.arraycopy(args, 0, input, 1, args.length);
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,
-                    () -> rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>())));
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                try {
+                    rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>()));
+                } catch (CommandException e) {
+                    e.sendErrorMessage(sender);
+                }
+            });
             return true;
         }
 
