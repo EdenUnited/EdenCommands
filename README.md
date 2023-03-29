@@ -128,8 +128,8 @@ class MyPlugin extends JavaPlugin {
             return;
         }
         Random random = new Random();
-        var list = Arrays.stream(Material.values()).filter(Material::isBlock).toList();
-        var material = list.get(random.nextInt(list.size()));
+        List<Material> list = Arrays.stream(Material.values()).filter(Material::isBlock).toList();
+        Material material = list.get(random.nextInt(list.size()));
         int x = context.parameter("x");
         int y = context.parameter("y");
         int z = context.parameter("z");
@@ -150,7 +150,7 @@ class MyPlugin extends JavaPlugin {
 <dependency>
     <groupId>com.github.EdenUnited</groupId>
     <artifactId>EdenCommands</artifactId>
-    <version>2.3</version>
+    <version>2.4</version>
 </dependency>
 ```
 
@@ -162,6 +162,6 @@ repositories {
 ```
 ```
 dependencies {
-    implementation 'com.github.EdenUnited:EdenCommands:2.3'
+    implementation 'com.github.EdenUnited:EdenCommands:2.4'
 }
 ```

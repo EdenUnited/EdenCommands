@@ -26,7 +26,7 @@ class CommandTree {
     private CommandTree(String value) {
         this.value = value;
         try {
-            var key = Name.readName(value, " {");
+            Name key = Name.readName(value, " {");
             this.key = key.value();
             params = ParamList.readParams(value.substring(key.len)).asMap();
             if (!params.containsKey("type")) {
@@ -64,7 +64,7 @@ class CommandTree {
     }
 
     private void parseChildren(String toParse, String key, CommandExecutor executor) {
-        var oChild = children.stream().filter(c -> c.value.equals(key)).findAny();
+        Optional<CommandTree> oChild = children.stream().filter(c -> c.value.equals(key)).findAny();
         CommandTree child;
         if (oChild.isEmpty()) {
             child = new CommandTree(key);
@@ -147,7 +147,7 @@ class CommandTree {
         }
 
         public String toString() {
-            var list = this.list.stream().map(Param::toString).sorted().toList();
+            List<String> list = this.list.stream().map(Param::toString).sorted().toList();
             return "{" + String.join(",", list) + "}";
         }
 
@@ -179,7 +179,7 @@ class CommandTree {
 
         static Name readName(String toParse, String endChars, boolean blockSpaces) throws ParseException {
             if (toParse.charAt(0) == '\'') {
-                var param = readQuotedString(toParse, blockSpaces);
+                Name param = readQuotedString(toParse, blockSpaces);
                 int len = param.len();
                 String remaining = toParse.substring(len);
                 if (remaining.isBlank()) return param;

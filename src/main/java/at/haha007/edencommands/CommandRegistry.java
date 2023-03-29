@@ -75,8 +75,8 @@ public class CommandRegistry implements Listener {
 
         NodeCommand command = registeredCommands.get(args[0].toLowerCase());
         if (command == null) return;
-        var context = new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>());
-        var completions = command.tabCompleter().apply(context);
+        InternalContext context = new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>());
+        List<AsyncTabCompleteEvent.Completion> completions = command.tabCompleter().apply(context);
         completions = completions.stream().distinct().sorted(Comparator.comparing(AsyncTabCompleteEvent.Completion::suggestion)).toList();
         event.completions(completions);
     }
@@ -139,7 +139,7 @@ public class CommandRegistry implements Listener {
         @NotNull
         public Function<InternalContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter() {
             return context -> {
-                var completions = rootNode.tabComplete(context);
+                List<AsyncTabCompleteEvent.Completion> completions = rootNode.tabComplete(context);
                 return completions == null ? List.of() : completions;
             };
         }
