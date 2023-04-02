@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,10 @@ public class AnnotatedCommandLoader {
         for (DefaultArgumentParsers value : DefaultArgumentParsers.values()) {
             addArgumentParser(value.getKey(), value);
         }
+    }
+
+    public List<CommandBuilder<?>> getCommands() {
+        return root.getChildCommands(argumentParserProvider);
     }
 
     public void addAnnotated(Object obj) {
