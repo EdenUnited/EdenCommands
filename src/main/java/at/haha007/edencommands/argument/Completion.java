@@ -1,7 +1,5 @@
 package at.haha007.edencommands.argument;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
  * Needs to be converted to strings in the implementation though.
  * @param <T>
  */
-@Getter
-@Accessors(fluent = true)
 public class Completion<T> {
     @NotNull
     private final T completion;
@@ -35,5 +31,13 @@ public class Completion<T> {
     public Completion(@NotNull T completion, @Nullable Component tooltip) {
         this.completion = completion;
         this.tooltip = tooltip;
+    }
+
+    public @NotNull T completion() {
+        return this.completion;
+    }
+
+    public @Nullable Component tooltip() {
+        return this.tooltip;
     }
 }

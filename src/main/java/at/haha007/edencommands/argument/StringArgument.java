@@ -3,25 +3,24 @@ package at.haha007.edencommands.argument;
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Builder;
-import lombok.Singular;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.TriState;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class StringArgument extends Argument<String> {
     private final StringParser parser;
 
-    @Builder
     public StringArgument(StringParser parser,
-                          @NotNull @Singular List<AsyncTabCompleteEvent.Completion> completions,
+                          @NotNull List<AsyncTabCompleteEvent.Completion> completions,
                           TriState filterByName) {
         super(c -> completions, filterByName == null || filterByName.toBooleanOrElse(true));
         this.parser = parser == null ? word() : parser;
+    }
+
+    public static StringArgumentBuilder builder() {
+        return new StringArgumentBuilder();
     }
 
     @Override
@@ -100,6 +99,57 @@ public class StringArgument extends Argument<String> {
 
             sb.deleteCharAt(sb.length() - 1);
             return new ParsedArgument<>(sb.toString(), amount);
+        }
+    }
+
+    public static class StringArgumentBuilder {
+        private StringParser parser;
+        private ArrayList<AsyncTabCompleteEvent.Completion> completions;
+        private TriState filterByName;
+
+        StringArgumentBuilder() {
+        }
+
+        public StringArgumentBuilder parser(StringParser parser) {
+            this.parser = parser;
+            return this;
+        }
+
+        public StringArgumentBuilder completion(AsyncTabCompleteEvent.Completion completion) {
+            if (this.completions == null) this.completions = new ArrayList<>();
+            this.completions.add(completion);
+            return this;
+        }
+
+        public StringArgumentBuilder completions(Collection<? extends AsyncTabCompleteEvent.Completion> completions) {
+            if (this.completions == null) this.completions = new ArrayList<>();
+            this.completions.addAll(completions);
+            return this;
+        }
+
+        public StringArgumentBuilder clearCompletions() {
+            if (this.completions != null)
+                this.completions.clear();
+            return this;
+        }
+
+        public StringArgumentBuilder filterByName(TriState filterByName) {
+            this.filterByName = filterByName;
+            return this;
+        }
+
+        public StringArgument build() {
+            List<AsyncTabCompleteEvent.Completion> completions = switch (this.completions == null ? 0 : this.completions.size()) {
+                case 0 -> Collections.emptyList();
+                case 1 -> Collections.singletonList(this.completions.get(0));
+                default -> List.copyOf(this.completions);
+            };
+
+            return new StringArgument(parser, completions, filterByName);
+        }
+
+        public String toString() {
+            return "StringArgument.StringArgumentBuilder(parser=" + this.parser + ", completions=" + this.completions + ", filterByName=" + this.filterByName + ")";
         }
     }
 }

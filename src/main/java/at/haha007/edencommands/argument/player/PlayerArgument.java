@@ -5,7 +5,6 @@ import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Builder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.TriState;
 import org.bukkit.Bukkit;
@@ -15,6 +14,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,16 +30,19 @@ public class PlayerArgument extends Argument<Player> {
     @NotNull
     private final Function<String, Component> playerNotFoundErrorProvider;
 
-    @Builder
-    private PlayerArgument(Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter,
-                           TriState filterByName,
-                           TriState exact,
-                           Function<String, Component> playerNotFoundErrorProvider) {
+    private PlayerArgument(@Nullable Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter,
+                           @Nullable TriState filterByName,
+                           @Nullable TriState exact,
+                           @Nullable Function<String, Component> playerNotFoundErrorProvider) {
         super(tabCompleter == null ? new TabCompleter() : tabCompleter, filterByName == null || filterByName.toBooleanOrElse(true));
         this.exact = exact == null || exact.toBooleanOrElse(true);
         if (playerNotFoundErrorProvider == null)
             playerNotFoundErrorProvider = s -> Component.text("Player not found: <%s>!".formatted(s));
         this.playerNotFoundErrorProvider = playerNotFoundErrorProvider;
+    }
+
+    public static PlayerArgumentBuilder builder() {
+        return new PlayerArgumentBuilder();
     }
 
     public @NotNull ParsedArgument<Player> parse(CommandContext context) throws CommandException {
@@ -84,6 +87,44 @@ public class PlayerArgument extends Argument<Player> {
             completions = new ArrayList<>(completions);
             completions.addAll(List.of("@p", "@r", "@s"));
             return completions.stream().map(AsyncTabCompleteEvent.Completion::completion).collect(Collectors.toList());
+        }
+    }
+
+    public static class PlayerArgumentBuilder {
+        private Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter;
+        private TriState filterByName;
+        private TriState exact;
+        private Function<String, Component> playerNotFoundErrorProvider;
+
+        PlayerArgumentBuilder() {
+        }
+
+        public PlayerArgumentBuilder tabCompleter(Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter) {
+            this.tabCompleter = tabCompleter;
+            return this;
+        }
+
+        public PlayerArgumentBuilder filterByName(TriState filterByName) {
+            this.filterByName = filterByName;
+            return this;
+        }
+
+        public PlayerArgumentBuilder exact(TriState exact) {
+            this.exact = exact;
+            return this;
+        }
+
+        public PlayerArgumentBuilder playerNotFoundErrorProvider(Function<String, Component> playerNotFoundErrorProvider) {
+            this.playerNotFoundErrorProvider = playerNotFoundErrorProvider;
+            return this;
+        }
+
+        public PlayerArgument build() {
+            return new PlayerArgument(tabCompleter, filterByName, exact, playerNotFoundErrorProvider);
+        }
+
+        public String toString() {
+            return "PlayerArgument.PlayerArgumentBuilder(tabCompleter=" + this.tabCompleter + ", filterByName=" + this.filterByName + ", exact=" + this.exact + ", playerNotFoundErrorProvider=" + this.playerNotFoundErrorProvider + ")";
         }
     }
 }

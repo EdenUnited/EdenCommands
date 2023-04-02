@@ -3,8 +3,6 @@ package at.haha007.edencommands.tree;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -13,9 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-@Accessors(fluent = true)
-@EqualsAndHashCode
-abstract class CommandNode<T extends CommandNode<T>> {
+public abstract class CommandNode<T extends CommandNode<T>> {
     private static final CommandExecutor defaultExecutor = c -> {
     };
 
@@ -41,7 +37,7 @@ abstract class CommandNode<T extends CommandNode<T>> {
         return requirement.test(sender);
     }
 
-    public boolean execute(InternalContext context) {
+    public boolean execute(InternalContext context) throws CommandException {
         if (!testRequirement(context.sender()))
             return false;
         if (!context.hasNext()) {
@@ -49,17 +45,26 @@ abstract class CommandNode<T extends CommandNode<T>> {
                 executor.execute(context.context());
                 return true;
             } catch (CommandException e) {
-                e.sendErrorMessage(context.sender());
-                return true;
+                throw e;
             } catch (Throwable e) {
                 e.printStackTrace();
                 return sendUsageText(context.sender());
             }
         }
+
+        CommandException exception = null;
         for (CommandNode<?> child : children) {
-            if (child.execute(context.next()))
-                return true;
+            try {
+                if (child.execute(context.next())) {
+                    return true;
+                }
+            } catch (CommandException e) {
+                exception = e;
+            }
         }
+        if (exception != null)
+            throw exception;
+
         return sendUsageText(context.sender());
     }
 
@@ -77,5 +82,15 @@ abstract class CommandNode<T extends CommandNode<T>> {
         if (usageText == null) return false;
         sender.sendMessage(usageText);
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandNode{" +
+                "children=" + children +
+                ", executor=" + executor +
+                ", requirement=" + requirement +
+                ", usageText=" + usageText +
+                '}';
     }
 }

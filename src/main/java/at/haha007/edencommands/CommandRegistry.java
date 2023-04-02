@@ -5,8 +5,6 @@ import at.haha007.edencommands.tree.ArgumentCommandNode;
 import at.haha007.edencommands.tree.InternalContext;
 import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -77,8 +75,8 @@ public class CommandRegistry implements Listener {
 
         NodeCommand command = registeredCommands.get(args[0].toLowerCase());
         if (command == null) return;
-        var context = new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>());
-        var completions = command.tabCompleter().apply(context);
+        InternalContext context = new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>());
+        List<AsyncTabCompleteEvent.Completion> completions = command.tabCompleter().apply(context);
         completions = completions.stream().distinct().sorted(Comparator.comparing(AsyncTabCompleteEvent.Completion::suggestion)).toList();
         event.completions(completions);
     }
@@ -121,8 +119,6 @@ public class CommandRegistry implements Listener {
     }
 
     private abstract static class NodeCommand extends Command {
-        @Getter
-        @Accessors(fluent = true)
         protected final LiteralCommandNode rootNode;
 
         private NodeCommand(LiteralCommandNode rootNode) {
@@ -143,7 +139,7 @@ public class CommandRegistry implements Listener {
         @NotNull
         public Function<InternalContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter() {
             return context -> {
-                var completions = rootNode.tabComplete(context);
+                List<AsyncTabCompleteEvent.Completion> completions = rootNode.tabComplete(context);
                 return completions == null ? List.of() : completions;
             };
         }
@@ -152,8 +148,13 @@ public class CommandRegistry implements Listener {
             String[] input = new String[args.length + 1];
             input[0] = rootNode.literal();
             System.arraycopy(args, 0, input, 1, args.length);
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,
-                    () -> rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>())));
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                try {
+                    rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>()));
+                } catch (CommandException e) {
+                    e.sendErrorMessage(sender);
+                }
+            });
             return true;
         }
 

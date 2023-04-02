@@ -5,8 +5,6 @@ import at.haha007.edencommands.CommandExecutor;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -16,15 +14,13 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Accessors(fluent = true)
 public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNode<T>> {
     @NotNull
     private final String key;
-    @Getter
     private final Argument<T> argument;
 
     /**
-     * @param key the key the access the parsed argument from the @{@link at.haha007.edencommands.CommandContext}
+     * @param key      the key the access the parsed argument from the @{@link at.haha007.edencommands.CommandContext}
      * @param argument the @{@link Argument} to parse and tab-complete part of the command
      * @return a new @{@link ArgumentCommandBuilder}
      */
@@ -58,18 +54,25 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
         }
     }
 
-    public boolean execute(InternalContext context) {
+    public boolean execute(InternalContext context) throws CommandException {
         if (!testRequirement(context.sender()))
             return false;
-        try {
-            ParsedArgument<T> parse = argument.parse(context.context());
-            context.putArgument(key, parse);
-            context = context.next(parse.pointerIncrements() - 1);
-            return super.execute(context);
-        } catch (CommandException e) {
-            e.sendErrorMessage(context.sender());
-            return true;
-        }
+        ParsedArgument<T> parse = argument.parse(context.context());
+        context.putArgument(key, parse);
+        context = context.next(parse.pointerIncrements() - 1);
+        return super.execute(context);
+    }
+
+    public Argument<T> argument() {
+        return this.argument;
+    }
+
+    @Override
+    public String toString() {
+        return "ArgumentCommandNode{" +
+                "key='" + key + '\'' +
+                ", argument=" + argument +
+                "} " + super.toString();
     }
 
     public static final class ArgumentCommandBuilder<T> implements CommandBuilder<ArgumentCommandBuilder<T>> {
@@ -102,8 +105,9 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
 
         /**
          * "/command subcommand"
-         *     ^          ^
-         *   parent     child
+         * ^          ^
+         * parent     child
+         *
          * @param child A Child command under the current one
          * @return this
          */

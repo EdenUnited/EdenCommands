@@ -1,9 +1,8 @@
 package at.haha007.edencommands.tree;
 
+import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -14,8 +13,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Getter
-@Accessors(fluent = true)
 public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
     @NotNull
     private final String literal;
@@ -53,7 +50,7 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
         return List.of();
     }
 
-    public boolean execute(InternalContext context) {
+    public boolean execute(InternalContext context) throws CommandException {
         if (!context.current().equalsIgnoreCase(literal))
             return false;
         return super.execute(context);
@@ -61,6 +58,22 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
 
     private boolean startsWith(String literal, String start) {
         return literal.toLowerCase().startsWith(start.toLowerCase());
+    }
+
+    public @NotNull String literal() {
+        return this.literal;
+    }
+
+    public @Nullable Component tooltip() {
+        return this.tooltip;
+    }
+
+    @Override
+    public String toString() {
+        return "LiteralCommandNode{" +
+                "literal='" + literal + '\'' +
+                ", tooltip=" + tooltip +
+                "} " + super.toString();
     }
 
     public static class LiteralCommandBuilder implements CommandBuilder<LiteralCommandBuilder> {
