@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public abstract class CommandNode<T extends CommandNode<T>> {
+public abstract class CommandNode {
 
     //child commands
     @NotNull
-    private final List<CommandNode<?>> children;
+    private final List<CommandNode> children;
 
     @Nullable
     private final CommandExecutor executor;
@@ -28,7 +28,7 @@ public abstract class CommandNode<T extends CommandNode<T>> {
     @Nullable
     private final Predicate<CommandContext> requirement;
 
-    protected CommandNode(@NotNull List<CommandNode<?>> children,
+    protected CommandNode(@NotNull List<CommandNode> children,
                           @Nullable CommandExecutor executor,
                           @Nullable Predicate<CommandContext> requirement,
                           @Nullable CommandExecutor defaultExecutor) {
@@ -62,16 +62,17 @@ public abstract class CommandNode<T extends CommandNode<T>> {
                     return true;
                 }
             } catch (CommandException e) {
-                if (e.getMessage() != null)
+                if (e.getMessage() != null) {
                     e.sendErrorMessage(context.sender());
-                else
+                    return true;
+                } else {
                     return false;
-                return true;
+                }
             } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
-        for (CommandNode<?> child : children) {
+        for (CommandNode child : children) {
             if (!context.hasNext())
                 break;
             if (child.execute(context.next()))

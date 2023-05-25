@@ -44,8 +44,8 @@ class CommandTreeTest {
         tree.add("command b e", c -> System.out.println("command b e"));
         ArgumentParserProvider provider = new ArgumentParserProvider();
         Arrays.stream(DefaultArgumentParsers.values()).forEach(p -> provider.register(p.getKey(), p));
-        List<? extends CommandNode<?>> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
-        for (CommandNode<?> command : commands) {
+        List<? extends CommandNode> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
+        for (CommandNode command : commands) {
             if (!(command instanceof LiteralCommandNode literalCommandNode)) {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }
@@ -77,9 +77,9 @@ class CommandTreeTest {
         tree.add("command trustlist", c -> System.out.println("command b"));
         ArgumentParserProvider provider = new ArgumentParserProvider();
         Arrays.stream(DefaultArgumentParsers.values()).forEach(p -> provider.register(p.getKey(), p));
-        List<? extends CommandNode<?>> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
-        for (CommandNode<?> command : commands) {
-            if (!(command instanceof LiteralCommandNode literalCommandNode)) {
+        List<? extends CommandNode> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
+        for (CommandNode command : commands) {
+            if (!(command instanceof LiteralCommandNode)) {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }
             ContextBuilder context = new ContextBuilder(
@@ -93,6 +93,44 @@ class CommandTreeTest {
     }
 
     @Test
+    void defaultExecutor() {
+        Player sender = Mockito.mock(Player.class);
+        CommandTree tree = CommandTree.root();
+        tree.add("command a", c -> System.out.println("command a"));
+        tree.add("command b c", c -> System.out.println("command b c"));
+        tree.add("command b{default_executor:true}", c -> System.out.println("command b"));
+        ArgumentParserProvider provider = new ArgumentParserProvider();
+        List<? extends CommandNode> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
+        for (CommandNode command : commands) {
+            if (!(command instanceof LiteralCommandNode literalCommandNode)) {
+                throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
+            }
+            System.out.println(literalCommandNode);
+            System.out.println("  command b x");
+            command.execute(new ContextBuilder(
+                    sender,
+                    new String[]{"command", "b", "x"}
+            ));
+            System.out.println("  command b c");
+            command.execute(new ContextBuilder(
+                    sender,
+                    new String[]{"command", "b", "c"}
+            ));
+            System.out.println("  command a x");
+            command.execute(new ContextBuilder(
+                    sender,
+                    new String[]{"command", "a", "x"}
+            ));
+            System.out.println("  command a");
+            command.execute(new ContextBuilder(
+                    sender,
+                    new String[]{"command", "a"}
+            ));
+        }
+        Assertions.assertTrue(true);
+    }
+
+    @Test
     void arguments() {
         CommandSender mockSender = Mockito.mock(CommandSender.class);
 
@@ -101,8 +139,8 @@ class CommandTreeTest {
         ArgumentParserProvider provider = new ArgumentParserProvider();
         Arrays.stream(DefaultArgumentParsers.values()).forEach(p -> provider.register(p.getKey(), p));
 
-        List<? extends CommandNode<?>> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
-        for (CommandNode<?> command : commands) {
+        List<? extends CommandNode> commands = tree.getChildCommands(provider).stream().map(CommandBuilder::build).toList();
+        for (CommandNode command : commands) {
             if (!(command instanceof LiteralCommandNode)) {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }

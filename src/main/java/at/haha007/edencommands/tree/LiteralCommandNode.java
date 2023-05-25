@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
+public final class LiteralCommandNode extends CommandNode {
     @NotNull
     private final String literal;
     @Nullable
@@ -29,7 +29,7 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
 
     private LiteralCommandNode(@NotNull String literal,
                                @Nullable Component tooltip,
-                               List<CommandNode<?>> children,
+                               List<CommandNode> children,
                                CommandExecutor executor,
                                Predicate<CommandContext> requirement,
                                CommandExecutor defaultExecutor,

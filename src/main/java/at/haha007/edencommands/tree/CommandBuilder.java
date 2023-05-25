@@ -50,5 +50,5 @@ public interface CommandBuilder<T extends CommandBuilder<T>> {
      * @return a new @{@link CommandNode}
      */
     @NotNull
-    CommandNode<?> build();
+    CommandNode build();
 }

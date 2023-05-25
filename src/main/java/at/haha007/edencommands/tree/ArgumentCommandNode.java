@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNode<T>> {
+public final class ArgumentCommandNode<T> extends CommandNode {
     @NotNull
     private final String key;
     private final Argument<T> argument;
@@ -32,7 +32,7 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
                                 CommandExecutor defaultExecutor,
                                 Predicate<CommandContext> requirement,
                                 CommandExecutor executor,
-                                List<CommandNode<?>> children) {
+                                List<CommandNode> children) {
         super(children, executor, requirement, defaultExecutor);
         this.key = key;
         this.argument = argument;
