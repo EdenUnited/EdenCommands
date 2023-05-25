@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mockito;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -20,7 +19,7 @@ public class CommandNodeTest {
     @Test
     void tabLiteral() {
         LiteralCommandNode node = LiteralCommandNode.builder("test").then(LiteralCommandNode.builder("arg")).build();
-        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new InternalContext(sender, new String[]{"test", ""}, 0, new LinkedHashMap<>()));
+        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(sender, new String[]{"test", ""}));
         Assertions.assertEquals(completes.size(), 1);
         Assertions.assertEquals(completes.get(0).suggestion(), "arg");
     }
@@ -38,7 +37,7 @@ public class CommandNodeTest {
                 .build();
 
         LiteralCommandNode node = LiteralCommandNode.builder("test").then(ArgumentCommandNode.builder("arg", argument)).build();
-        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new InternalContext(sender, new String[]{"test", ""}, 0, new LinkedHashMap<>()));
+        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(sender, new String[]{"test", ""}));
         Assertions.assertEquals(3, completes.size());
         Assertions.assertEquals("0.1", completes.get(0).suggestion());
     }

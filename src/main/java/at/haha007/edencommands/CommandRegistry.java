@@ -2,7 +2,7 @@ package at.haha007.edencommands;
 
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.tree.ArgumentCommandNode;
-import at.haha007.edencommands.tree.InternalContext;
+import at.haha007.edencommands.tree.ContextBuilder;
 import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.bukkit.Bukkit;
@@ -14,7 +14,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -75,7 +78,7 @@ public class CommandRegistry implements Listener {
 
         NodeCommand command = registeredCommands.get(args[0].toLowerCase());
         if (command == null) return;
-        InternalContext context = new InternalContext(event.getSender(), args, 0, new LinkedHashMap<>());
+        ContextBuilder context = new ContextBuilder(event.getSender(), args);
         List<AsyncTabCompleteEvent.Completion> completions = command.tabCompleter().apply(context);
         completions = completions.stream().distinct().sorted(Comparator.comparing(AsyncTabCompleteEvent.Completion::suggestion)).toList();
         event.completions(completions);
@@ -108,13 +111,13 @@ public class CommandRegistry implements Listener {
      * @param permission the permission key
      * @return A new @{@link Predicate<CommandSender>}
      */
-    public static Predicate<CommandSender> permission(@NotNull String permission) {
+    public static Predicate<CommandContext> permission(@NotNull String permission) {
         return new PermissionRequirement(permission);
     }
 
-    private record PermissionRequirement(String permission) implements Predicate<CommandSender> {
-        public boolean test(CommandSender sender) {
-            return sender.hasPermission(permission);
+    private record PermissionRequirement(String permission) implements Predicate<CommandContext> {
+        public boolean test(CommandContext context) {
+            return context.sender().hasPermission(permission);
         }
     }
 
@@ -127,7 +130,7 @@ public class CommandRegistry implements Listener {
         }
 
         @NotNull
-        public abstract Function<InternalContext, @NotNull List<AsyncTabCompleteEvent.Completion>> tabCompleter();
+        public abstract Function<ContextBuilder, @NotNull List<AsyncTabCompleteEvent.Completion>> tabCompleter();
     }
 
     private class AsyncNodeCommand extends NodeCommand {
@@ -137,7 +140,7 @@ public class CommandRegistry implements Listener {
 
         @Override
         @NotNull
-        public Function<InternalContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter() {
+        public Function<ContextBuilder, List<AsyncTabCompleteEvent.Completion>> tabCompleter() {
             return context -> {
                 List<AsyncTabCompleteEvent.Completion> completions = rootNode.tabComplete(context);
                 return completions == null ? List.of() : completions;
@@ -149,17 +152,14 @@ public class CommandRegistry implements Listener {
             input[0] = rootNode.literal();
             System.arraycopy(args, 0, input, 1, args.length);
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                try {
-                    rootNode.execute(new InternalContext(sender, input, 0, new LinkedHashMap<>()));
-                } catch (CommandException e) {
-                    e.sendErrorMessage(sender);
-                }
+                rootNode.execute(new ContextBuilder(sender, input));
             });
             return true;
         }
 
         public boolean testPermissionSilent(@NotNull CommandSender target) {
-            return rootNode.testRequirement(target);
+            ContextBuilder contextBuilder = new ContextBuilder(target, new String[]{rootNode.literal()});
+            return rootNode.testRequirement(contextBuilder.build());
         }
 
         @NotNull

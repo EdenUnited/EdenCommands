@@ -1,10 +1,9 @@
 package at.haha007.edencommands.tree;
 
-import at.haha007.edencommands.CommandException;
+import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandExecutor;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,11 +12,12 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
+public final class LiteralCommandNode extends CommandNode {
     @NotNull
     private final String literal;
     @Nullable
     private final Component tooltip;
+    private final boolean ignoreCase;
 
     /**
      * @param literal the literal
@@ -29,29 +29,36 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
 
     private LiteralCommandNode(@NotNull String literal,
                                @Nullable Component tooltip,
-                               List<CommandNode<?>> children,
+                               List<CommandNode> children,
                                CommandExecutor executor,
-                               Predicate<CommandSender> requirement,
-                               Component usageText) {
-        super(List.copyOf(children), executor, requirement, usageText);
+                               Predicate<CommandContext> requirement,
+                               CommandExecutor defaultExecutor,
+                               boolean ignoreCase) {
+        super(List.copyOf(children), executor, requirement, defaultExecutor);
         this.literal = literal.toLowerCase();
         this.tooltip = tooltip;
+        this.ignoreCase = ignoreCase;
     }
 
-    public List<AsyncTabCompleteEvent.Completion> tabComplete(InternalContext context) {
-        if (!testRequirement(context.sender()))
+    public List<AsyncTabCompleteEvent.Completion> tabComplete(ContextBuilder context) {
+        if (!testRequirement(context.build()))
             return List.of();
-        if (context.hasNext() && literal.equalsIgnoreCase(context.current())) {
+        if (context.hasNext() && ignoreCase && literal.equalsIgnoreCase(context.current())) {
             return super.tabComplete(context);
         }
-        if (startsWith(literal, context.current())) {
+        if (context.hasNext() && !ignoreCase && literal.equals(context.current())) {
+            return super.tabComplete(context);
+        }
+        if (!context.hasNext() && startsWith(literal, context.current())) {
             return List.of(AsyncTabCompleteEvent.Completion.completion(literal, tooltip));
         }
         return List.of();
     }
 
-    public boolean execute(InternalContext context) throws CommandException {
-        if (!context.current().equalsIgnoreCase(literal))
+    public boolean execute(ContextBuilder context) {
+        if (ignoreCase && !context.current().equalsIgnoreCase(literal))
+            return false;
+        if (!ignoreCase && !context.current().equals(literal))
             return false;
         return super.execute(context);
     }
@@ -78,11 +85,12 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
 
     public static class LiteralCommandBuilder implements CommandBuilder<LiteralCommandBuilder> {
         private final List<CommandBuilder<?>> children = new ArrayList<>();
-        private final List<Predicate<CommandSender>> requirements = new ArrayList<>();
+        private final List<Predicate<CommandContext>> requirements = new ArrayList<>();
         private CommandExecutor executor;
-        private Component usageText;
+        private CommandExecutor defaultExecutor;
         private final String literal;
         private Component tooltip;
+        private boolean ignoreCase;
 
         private LiteralCommandBuilder(@NotNull String literal) {
             if (literal.contains(" ")) throw new IllegalArgumentException("literal");
@@ -92,21 +100,23 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
         /**
          * @return a clone of this instance
          */
+        @SuppressWarnings("MethodDoesntCallSuperMethod")
         @NotNull
         public LiteralCommandBuilder clone() {
             LiteralCommandBuilder clone = new LiteralCommandBuilder(literal);
             clone.requirements.addAll(requirements);
             clone.children.addAll(children);
             clone.executor = executor;
-            clone.usageText = usageText;
+            clone.defaultExecutor = defaultExecutor;
             clone.tooltip = tooltip;
             return clone;
         }
 
         /**
          * "/command subcommand"
-         *     ^          ^
-         *   parent     child
+         * ^          ^
+         * parent     child
+         *
          * @param child A Child command under the current one
          * @return this
          */
@@ -121,7 +131,7 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
          * @return this
          */
         @NotNull
-        public LiteralCommandBuilder executor(@NotNull CommandExecutor executor) {
+        public LiteralCommandBuilder executor(CommandExecutor executor) {
             this.executor = executor;
             return this;
         }
@@ -131,18 +141,18 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
          * @return this
          */
         @NotNull
-        public LiteralCommandBuilder requires(@NotNull Predicate<CommandSender> requirement) {
+        public LiteralCommandBuilder requires(@NotNull Predicate<CommandContext> requirement) {
             requirements.add(requirement);
             return this;
         }
 
         /**
-         * @param usage the Usage text that shows when the command failed
+         * @param commandExecutor the @{@link CommandExecutor} that should be run when the command is run
          * @return this
          */
         @NotNull
-        public LiteralCommandBuilder usageText(@NotNull Component usage) {
-            usageText = usage;
+        public LiteralCommandBuilder defaultExecutor(CommandExecutor commandExecutor) {
+            defaultExecutor = commandExecutor;
             return this;
         }
 
@@ -156,16 +166,28 @@ public final class LiteralCommandNode extends CommandNode<LiteralCommandNode> {
             return this;
         }
 
+        @NotNull
+        public LiteralCommandBuilder ignoreCase(boolean ignoreCase) {
+            this.ignoreCase = ignoreCase;
+            return this;
+        }
+
         /**
          * @return a new @{@link LiteralCommandNode}
          */
         @NotNull
         public LiteralCommandNode build() {
-            Predicate<CommandSender> requirement = c -> true;
-            for (Predicate<CommandSender> r : requirements) {
+            Predicate<CommandContext> requirement = c -> true;
+            for (Predicate<CommandContext> r : requirements) {
                 requirement = requirement.and(r);
             }
-            return new LiteralCommandNode(literal, tooltip, children.stream().map(CommandBuilder::build).collect(Collectors.toList()), executor, requirement, usageText);
+            return new LiteralCommandNode(literal,
+                    tooltip,
+                    children.stream().map(CommandBuilder::build).collect(Collectors.toList()),
+                    executor,
+                    requirement,
+                    defaultExecutor,
+                    ignoreCase);
         }
     }
 
