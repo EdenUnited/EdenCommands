@@ -4,6 +4,6 @@ import at.haha007.edencommands.argument.Argument;
 
 import java.util.Map;
 
-interface ArgumentParser<T extends Argument<?>> {
+public interface ArgumentParser<T extends Argument<?>> {
     T parse(Map<String, String> s);
 }

@@ -6,7 +6,6 @@ import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.tree.ArgumentCommandNode;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.LiteralCommandNode;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.text.ParseException;
 import java.util.*;
@@ -60,7 +59,7 @@ class CommandTree {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        parseChildren(toParse.substring(name.len() + params.len()), name + "" + params, executor);
+        parseChildren(toParse.substring(name.len() + params.len()), name + String.valueOf(params), executor);
     }
 
     private void parseChildren(String toParse, String key, CommandExecutor executor) {
@@ -85,13 +84,15 @@ class CommandTree {
                 throw new ParseException("ArgumentParser for type " + params.get("type") + " not found!", 0);
             node = ArgumentCommandNode.builder(key, argument);
         }
-        if (params.containsKey("usage"))
-            node.usageText(MiniMessage.miniMessage().deserialize(params.get("usage")));
         if (params.containsKey("permission"))
             node.requires(CommandRegistry.permission(params.get("permission")));
 
-        node.executor(Objects.requireNonNullElseGet(executor, () -> c -> {
-        }));
+        boolean asDefaultExecutor = params.containsKey("default_executor") &&
+                params.get("default_executor").equalsIgnoreCase("true");
+        if (asDefaultExecutor)
+            node.defaultExecutor(executor);
+        else
+            node.executor(executor);
 
         for (CommandTree child : children) {
             node.then(child.asCommand(argumentParser));

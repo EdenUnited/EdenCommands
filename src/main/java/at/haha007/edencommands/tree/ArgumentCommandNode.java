@@ -1,12 +1,11 @@
 package at.haha007.edencommands.tree;
 
+import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -30,34 +29,39 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
 
     private ArgumentCommandNode(@NotNull String key,
                                 Argument<T> argument,
-                                Component usageText,
-                                Predicate<CommandSender> requirement,
+                                CommandExecutor defaultExecutor,
+                                Predicate<CommandContext> requirement,
                                 CommandExecutor executor,
                                 List<CommandNode<?>> children) {
-        super(children, executor, requirement, usageText);
+        super(children, executor, requirement, defaultExecutor);
         this.key = key;
         this.argument = argument;
     }
 
-    public List<AsyncTabCompleteEvent.Completion> tabComplete(InternalContext context) {
-        if (!testRequirement(context.sender()))
+    public List<AsyncTabCompleteEvent.Completion> tabComplete(ContextBuilder context) {
+        if (!testRequirement(context.build()))
             return List.of();
         try {
-            ParsedArgument<T> parse = argument.parse(context.context());
+            ParsedArgument<T> parse = argument.parse(context.build());
             context = context.next(parse.pointerIncrements() - 1);
             if (context.hasNext()) {
                 return super.tabComplete(context.next(parse.pointerIncrements() - 1));
             }
-            return argument.tabComplete(context.context());
+            return argument.tabComplete(context.build());
         } catch (CommandException e1) {
-            return argument.tabComplete(context.context());
+            return argument.tabComplete(context.build());
         }
     }
 
-    public boolean execute(InternalContext context) throws CommandException {
-        if (!testRequirement(context.sender()))
+    public boolean execute(ContextBuilder context) {
+        if (!testRequirement(context.build()))
             return false;
-        ParsedArgument<T> parse = argument.parse(context.context());
+        ParsedArgument<T> parse;
+        try {
+            parse = argument.parse(context.build());
+        } catch (CommandException exception) {
+            return false;
+        }
         context.putArgument(key, parse);
         context = context.next(parse.pointerIncrements() - 1);
         return super.execute(context);
@@ -77,9 +81,9 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
 
     public static final class ArgumentCommandBuilder<T> implements CommandBuilder<ArgumentCommandBuilder<T>> {
         private final List<CommandBuilder<?>> children = new ArrayList<>();
-        private final List<Predicate<CommandSender>> requirements = new ArrayList<>();
+        private final List<Predicate<CommandContext>> requirements = new ArrayList<>();
         private CommandExecutor executor;
-        private Component usageText;
+        private CommandExecutor defaultExecutor;
         @NotNull
         private final Argument<T> argument;
         @NotNull
@@ -93,13 +97,14 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
         /**
          * @return a clone of this instance
          */
+        @SuppressWarnings("MethodDoesntCallSuperMethod")
         @NotNull
         public ArgumentCommandBuilder<T> clone() {
             ArgumentCommandBuilder<T> clone = new ArgumentCommandBuilder<>(argument, key);
             clone.children.addAll(children);
             clone.requirements.addAll(requirements);
             clone.executor = executor;
-            clone.usageText = usageText;
+            clone.defaultExecutor = defaultExecutor;
             return clone;
         }
 
@@ -132,18 +137,18 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
          * @return this
          */
         @NotNull
-        public ArgumentCommandBuilder<T> requires(@NotNull Predicate<CommandSender> requirement) {
+        public ArgumentCommandBuilder<T> requires(@NotNull Predicate<CommandContext> requirement) {
             requirements.add(requirement);
             return this;
         }
 
         /**
-         * @param usage the Usage text that shows when the command failed
+         * @param defaultExecutor the @{@link CommandExecutor} that should be run when the command is run without any arguments
          * @return this
          */
         @NotNull
-        public ArgumentCommandBuilder<T> usageText(@NotNull Component usage) {
-            usageText = usage;
+        public ArgumentCommandBuilder<T> defaultExecutor(@NotNull CommandExecutor defaultExecutor) {
+            this.defaultExecutor = defaultExecutor;
             return this;
         }
 
@@ -151,12 +156,17 @@ public final class ArgumentCommandNode<T> extends CommandNode<ArgumentCommandNod
          * @return a new @{@link ArgumentCommandNode}
          */
         @NotNull
-        public CommandNode<?> build() {
-            Predicate<CommandSender> requirement = c -> true;
-            for (Predicate<CommandSender> r : requirements) {
+        public ArgumentCommandNode<T> build() {
+            Predicate<CommandContext> requirement = c -> true;
+            for (Predicate<CommandContext> r : requirements) {
                 requirement = requirement.and(r);
             }
-            return new ArgumentCommandNode<>(key, argument, usageText, requirement, executor, children.stream().map(CommandBuilder::build).collect(Collectors.toList()));
+            return new ArgumentCommandNode<>(key,
+                    argument,
+                    defaultExecutor,
+                    requirement,
+                    executor,
+                    children.stream().map(CommandBuilder::build).collect(Collectors.toList()));
         }
     }
 }

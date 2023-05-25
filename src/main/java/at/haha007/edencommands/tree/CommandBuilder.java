@@ -1,8 +1,7 @@
 package at.haha007.edencommands.tree;
 
+import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandExecutor;
-import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
@@ -11,8 +10,9 @@ public interface CommandBuilder<T extends CommandBuilder<T>> {
     /**
      * "/command subcommand"
      * "/command    other"
-     *     ^          ^
-     *  1parent   2children
+     * ^          ^
+     * 1parent   2children
+     *
      * @param child A Child command under the current one
      * @return this
      */
@@ -24,21 +24,21 @@ public interface CommandBuilder<T extends CommandBuilder<T>> {
      * @return this
      */
     @NotNull
-    T executor(@NotNull CommandExecutor executor);
+    T executor(CommandExecutor executor);
 
     /**
      * @param requirement A condition that has to match to execute the command. ie: permissions, gamemode
      * @return this
      */
     @NotNull
-    T requires(@NotNull Predicate<CommandSender> requirement);
+    T requires(@NotNull Predicate<CommandContext> requirement);
 
     /**
-     * @param usage the Usage text that shows when the command failed
+     * @param commandExecutor the @{@link CommandExecutor} that should be run when the command is run ignoring the subcommands if none are executed
      * @return this
      */
     @NotNull
-    T usageText(@NotNull Component usage);
+    T defaultExecutor(CommandExecutor commandExecutor);
 
     /**
      * @return a clone of the builder
