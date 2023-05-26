@@ -14,6 +14,7 @@ import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 class CommandTreeTest {
 
@@ -26,6 +27,10 @@ class CommandTreeTest {
         tree.add("command b d", this::execute);
         tree.add("command b e", this::execute);
         System.out.println(tree);
+        System.out.println("----------------");
+        for (CommandBuilder<?> childCommand : tree.getChildCommands(new ArgumentParserProvider(), Map.of("command", "b"))) {
+            System.out.println(childCommand.build());
+        }
         Assertions.assertTrue(true);
     }
 

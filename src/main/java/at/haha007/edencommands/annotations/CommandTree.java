@@ -74,10 +74,10 @@ class CommandTree {
         child.add(toParse, executor);
     }
 
-    CommandBuilder<?> asCommand(ArgumentParserProvider argumentParser) throws ParseException {
+    CommandBuilder<?> asCommand(ArgumentParserProvider argumentParser, Map<String, String> literalMap) throws ParseException {
         CommandBuilder<?> node;
         if (params.get("type").equalsIgnoreCase("literal")) {
-            node = LiteralCommandNode.builder(key);
+            node = LiteralCommandNode.builder(literalMap.getOrDefault(key, key));
         } else {
             Argument<?> argument = argumentParser.parse(params);
             if (argument == null)
@@ -95,15 +95,20 @@ class CommandTree {
             node.executor(executor);
 
         for (CommandTree child : children) {
-            node.then(child.asCommand(argumentParser));
+            node.then(child.asCommand(argumentParser, literalMap));
         }
         return node;
     }
 
     List<CommandBuilder<?>> getChildCommands(ArgumentParserProvider argumentParser) {
+        return getChildCommands(argumentParser, new HashMap<>());
+    }
+
+
+    List<CommandBuilder<?>> getChildCommands(ArgumentParserProvider argumentParser, Map<String, String> literalMap) {
         return children.stream().map(c -> {
             try {
-                return c.asCommand(argumentParser);
+                return c.asCommand(argumentParser, literalMap);
             } catch (ParseException e) {
                 e.printStackTrace();
             }

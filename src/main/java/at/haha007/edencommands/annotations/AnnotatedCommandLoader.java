@@ -8,15 +8,14 @@ import at.haha007.edencommands.tree.LiteralCommandNode;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AnnotatedCommandLoader {
     private final ArgumentParserProvider argumentParserProvider = new ArgumentParserProvider();
     private final CommandTree root = CommandTree.root();
     private final JavaPlugin plugin;
+    private final Map<String, String> literalMapper = new HashMap<>();
 
     public AnnotatedCommandLoader(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -32,8 +31,16 @@ public class AnnotatedCommandLoader {
         }
     }
 
+    private void mapLiterals(Map<String, String> map){
+        literalMapper.putAll(map);
+    }
+
+    private void mapLiteral(String literal, String mappedLiteral){
+        literalMapper.put(literal, mappedLiteral);
+    }
+
     public List<CommandBuilder<?>> getCommands() {
-        return root.getChildCommands(argumentParserProvider);
+        return root.getChildCommands(argumentParserProvider, literalMapper);
     }
 
     public void addAnnotated(Object obj) {
@@ -64,7 +71,7 @@ public class AnnotatedCommandLoader {
     }
 
     public void register(CommandRegistry registry) {
-        for (CommandBuilder<?> cmd : root.getChildCommands(argumentParserProvider)) {
+        for (CommandBuilder<?> cmd : root.getChildCommands(argumentParserProvider, literalMapper)) {
             if (!(cmd instanceof LiteralCommandNode.LiteralCommandBuilder literalCommandBuilder)) {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }
