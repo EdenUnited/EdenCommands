@@ -31,11 +31,11 @@ public class AnnotatedCommandLoader {
         }
     }
 
-    private void mapLiterals(Map<String, String> map){
+    public void mapLiterals(Map<String, String> map){
         literalMapper.putAll(map);
     }
 
-    private void mapLiteral(String literal, String mappedLiteral){
+    public void mapLiteral(String literal, String mappedLiteral){
         literalMapper.put(literal, mappedLiteral);
     }
 

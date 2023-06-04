@@ -44,6 +44,7 @@ public final class ArgumentCommandNode<T> extends CommandNode {
         try {
             ParsedArgument<T> parse = argument.parse(context.build());
             context = context.next(parse.pointerIncrements() - 1);
+            context.putArgument(key, parse);
             if (context.hasNext()) {
                 return super.tabComplete(context.next(parse.pointerIncrements() - 1));
             }
