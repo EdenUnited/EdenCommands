@@ -1,6 +1,10 @@
 # EdenCommands
 A command library to register Commands in a tree-style fashion.
 
+## TODO:
+### Requirement Annotations
+
+
 ## Usage
 
 ### Nodes

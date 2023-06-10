@@ -1,5 +1,6 @@
 package at.haha007.edencommands.annotations;
 
+import at.haha007.edencommands.annotations.annotations.Command;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -13,11 +14,12 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
+import java.util.List;
 import java.util.Set;
 
 @AutoService(javax.annotation.processing.Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
-@SupportedAnnotationTypes("at.haha007.edencommands.annotations.Command")
+@SupportedAnnotationTypes("at.haha007.edencommands.annotations.annotations.Command")
 public class SntaxCheckerProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -38,8 +40,8 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
         String value = command.value();
         CommandTree tree = CommandTree.root();
         try {
-            tree.add(value, c -> {
-            });
+            tree.add(List.of(value), null, c -> {
+            }, false);
         } catch (Exception e) {
             e.printStackTrace();
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Command annotation value has invalid syntax", element);

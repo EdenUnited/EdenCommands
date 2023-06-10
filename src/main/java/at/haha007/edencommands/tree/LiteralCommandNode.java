@@ -2,6 +2,7 @@ package at.haha007.edencommands.tree;
 
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandExecutor;
+import at.haha007.edencommands.Requirement;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +32,7 @@ public final class LiteralCommandNode extends CommandNode {
                                @Nullable Component tooltip,
                                List<CommandNode> children,
                                CommandExecutor executor,
-                               Predicate<CommandContext> requirement,
+                               Requirement requirement,
                                CommandExecutor defaultExecutor,
                                boolean ignoreCase) {
         super(List.copyOf(children), executor, requirement, defaultExecutor);
@@ -85,7 +86,7 @@ public final class LiteralCommandNode extends CommandNode {
 
     public static class LiteralCommandBuilder implements CommandBuilder<LiteralCommandBuilder> {
         private final List<CommandBuilder<?>> children = new ArrayList<>();
-        private final List<Predicate<CommandContext>> requirements = new ArrayList<>();
+        private final List<Requirement> requirements = new ArrayList<>();
         private CommandExecutor executor;
         private CommandExecutor defaultExecutor;
         private final String literal;
@@ -141,7 +142,7 @@ public final class LiteralCommandNode extends CommandNode {
          * @return this
          */
         @NotNull
-        public LiteralCommandBuilder requires(@NotNull Predicate<CommandContext> requirement) {
+        public LiteralCommandBuilder requires(@NotNull Requirement requirement) {
             requirements.add(requirement);
             return this;
         }
@@ -181,11 +182,12 @@ public final class LiteralCommandNode extends CommandNode {
             for (Predicate<CommandContext> r : requirements) {
                 requirement = requirement.and(r);
             }
+            Requirement req = requirement::test;
             return new LiteralCommandNode(literal,
                     tooltip,
                     children.stream().map(CommandBuilder::build).collect(Collectors.toList()),
                     executor,
-                    requirement,
+                    req,
                     defaultExecutor,
                     ignoreCase);
         }

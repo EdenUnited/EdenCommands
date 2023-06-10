@@ -1,10 +1,8 @@
 package at.haha007.edencommands.tree;
 
-import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandExecutor;
+import at.haha007.edencommands.Requirement;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Predicate;
 
 public interface CommandBuilder<T extends CommandBuilder<T>> {
     /**
@@ -31,7 +29,7 @@ public interface CommandBuilder<T extends CommandBuilder<T>> {
      * @return this
      */
     @NotNull
-    T requires(@NotNull Predicate<CommandContext> requirement);
+    T requires(@NotNull Requirement requirement);
 
     /**
      * @param commandExecutor the @{@link CommandExecutor} that should be run when the command is run ignoring the subcommands if none are executed

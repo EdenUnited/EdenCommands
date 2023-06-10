@@ -3,13 +3,13 @@ package at.haha007.edencommands.tree;
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
+import at.haha007.edencommands.Requirement;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 public abstract class CommandNode {
 
@@ -26,11 +26,11 @@ public abstract class CommandNode {
 
     //can be a permission or any other requirement such as gamemode
     @Nullable
-    private final Predicate<CommandContext> requirement;
+    private final Requirement requirement;
 
     protected CommandNode(@NotNull List<CommandNode> children,
                           @Nullable CommandExecutor executor,
-                          @Nullable Predicate<CommandContext> requirement,
+                          @Nullable Requirement requirement,
                           @Nullable CommandExecutor defaultExecutor) {
         this.children = children;
         this.executor = executor;

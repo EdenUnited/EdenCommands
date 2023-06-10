@@ -1,4 +1,4 @@
-package at.haha007.edencommands.annotations;
+package at.haha007.edencommands.annotations.annotations;
 
 import java.lang.annotation.*;
 

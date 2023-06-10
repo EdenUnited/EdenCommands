@@ -2,23 +2,23 @@ package at.haha007.edencommands.argument;
 
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
+import at.haha007.edencommands.TabCompleter;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class Argument<T> {
     @NotNull
-    private final Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter;
+    private final TabCompleter tabCompleter;
 
     /**
      * Filters tab completions by the string that gets tab-completed
      */
     private final boolean filterByName;
 
-    public Argument(@NotNull Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter, boolean filterByName) {
+    public Argument(@NotNull TabCompleter tabCompleter, boolean filterByName) {
         this.tabCompleter = tabCompleter;
         this.filterByName = filterByName;
     }

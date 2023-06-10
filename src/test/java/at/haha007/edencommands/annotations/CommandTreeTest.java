@@ -1,6 +1,7 @@
 package at.haha007.edencommands.annotations;
 
 import at.haha007.edencommands.CommandContext;
+import at.haha007.edencommands.annotations.parser.DefaultArgumentParsers;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.CommandNode;
 import at.haha007.edencommands.tree.ContextBuilder;

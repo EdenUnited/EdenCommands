@@ -1,231 +1,115 @@
 package at.haha007.edencommands.annotations;
 
 import at.haha007.edencommands.CommandExecutor;
-import at.haha007.edencommands.CommandRegistry;
+import at.haha007.edencommands.Requirement;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.tree.ArgumentCommandNode;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.LiteralCommandNode;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.text.ParseException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 class CommandTree {
+
+
+    //'key':'type'
+    //eg.: 'test':'literal'
+    //has to be able to parse with escaped characters
+
+    //map: type -> argument
+
+
     private final List<CommandTree> children = new ArrayList<>();
-    private final String value;
     private final String key;
-    private final Map<String, String> params;
+    private final String type;
     private CommandExecutor executor;
+    private CommandExecutor defaultExecutor;
+    private String requirement;
 
-    static CommandTree root() {
-        return new CommandTree("'root'{'type':'literal'}");
+    private CommandTree(String key, String type) {
+        this.key = key;
+        this.type = type;
     }
 
-    private CommandTree(String value) {
-        this.value = value;
-        try {
-            Name key = Name.readName(value, " {");
-            this.key = key.value();
-            params = ParamList.readParams(value.substring(key.len)).asMap();
-            if (!params.containsKey("type")) {
-                throw new ParseException("", key.len + 1);
-            }
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+    public static CommandTree root() {
+        return new CommandTree("root", "literal");
     }
 
-    void add(String toParse, CommandExecutor executor) {
-        toParse = toParse.trim();
-        if (toParse.isEmpty()) {
-            //end of command reached
-            this.executor = executor;
-            return;
+    public boolean add(@NotNull List<String> cmd, @Nullable String requirement, @NotNull CommandExecutor executor, boolean isDefault) {
+        String current = cmd.get(0);
+        List<String> rest = cmd.subList(1, cmd.size());
+        int splitIndex = current.lastIndexOf(':');
+        String key = splitIndex < 0 ? current : current.substring(0, splitIndex);
+        String type = splitIndex < 0 ? "literal" : current.substring(splitIndex + 1);
+        if (!key.equals(this.key) || !type.equals(this.type)) return false;
+        if (rest.isEmpty()) {
+            if (isDefault)
+                this.defaultExecutor = executor;
+            else
+                this.executor = executor;
+            this.requirement = requirement;
+            return true;
         }
-        Name name;
-        try {
-            name = Name.readName(toParse, " {");
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        if (toParse.substring(name.len()).isBlank() || toParse.substring(name.len()).charAt(0) == ' ') {
-            parseChildren(toParse.substring(name.len()), name + "{'type':'literal'}", executor);
-            return;
-        }
-        ParamList params;
-        try {
-            params = ParamList.readParams(toParse.substring(name.len()));
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        parseChildren(toParse.substring(name.len() + params.len()), name + String.valueOf(params), executor);
-    }
-
-    private void parseChildren(String toParse, String key, CommandExecutor executor) {
-        Optional<CommandTree> oChild = children.stream().filter(c -> c.value.equals(key)).findAny();
-        CommandTree child;
-        if (oChild.isEmpty()) {
-            child = new CommandTree(key);
-            children.add(child);
-        } else {
-            child = oChild.get();
-        }
-        child.add(toParse, executor);
-    }
-
-    CommandBuilder<?> asCommand(ArgumentParserProvider argumentParser, Map<String, String> literalMap) throws ParseException {
-        CommandBuilder<?> node;
-        if (params.get("type").equalsIgnoreCase("literal")) {
-            node = LiteralCommandNode.builder(literalMap.getOrDefault(key, key));
-        } else {
-            Argument<?> argument = argumentParser.parse(params);
-            if (argument == null)
-                throw new ParseException("ArgumentParser for type " + params.get("type") + " not found!", 0);
-            node = ArgumentCommandNode.builder(key, argument);
-        }
-        if (params.containsKey("permission"))
-            node.requires(CommandRegistry.permission(params.get("permission")));
-
-        boolean asDefaultExecutor = params.containsKey("default_executor") &&
-                params.get("default_executor").equalsIgnoreCase("true");
-        if (asDefaultExecutor)
-            node.defaultExecutor(executor);
-        else
-            node.executor(executor);
-
         for (CommandTree child : children) {
-            node.then(child.asCommand(argumentParser, literalMap));
+            if (child.add(rest, requirement, executor, isDefault)) return true;
         }
-        return node;
+
+        current = rest.get(0);
+        splitIndex = current.lastIndexOf(':');
+        key = splitIndex < 0 ? current : current.substring(0, splitIndex);
+        type = splitIndex < 0 ? "literal" : current.substring(splitIndex + 1);
+        CommandTree child = new CommandTree(key, type);
+        children.add(child);
+        return true;
     }
 
-    List<CommandBuilder<?>> getChildCommands(ArgumentParserProvider argumentParser) {
-        return getChildCommands(argumentParser, new HashMap<>());
+    @NotNull
+    public CommandBuilder<?> toCommand(Map<String, Argument<?>> argumentMap,
+                                       Map<String, String> literalMapper,
+                                       Map<String, Requirement> requirements) {
+        CommandBuilder<?> cmd;
+        if (type.equals("literal")) {
+            String mapped = literalMapper.getOrDefault(key, key);
+            cmd = LiteralCommandNode.builder(mapped);
+        } else {
+            Argument<?> argument = argumentMap.get(type);
+            if (argument == null) throw new IllegalArgumentException("Unknown argument type: " + type);
+            cmd = ArgumentCommandNode.builder(key, argument);
+        }
+        if (executor != null) cmd.executor(executor);
+        if (defaultExecutor != null) cmd.defaultExecutor(defaultExecutor);
+        Requirement requirement = calculateRequirement(requirements);
+        if (requirement != null) cmd.requires(requirement);
+
+        return cmd;
     }
 
-
-    List<CommandBuilder<?>> getChildCommands(ArgumentParserProvider argumentParser, Map<String, String> literalMap) {
-        return children.stream().map(c -> {
-            try {
-                return c.asCommand(argumentParser, literalMap);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+    public List<CommandTree> getChildren() {
+        return children;
     }
 
-    @Override
-    public String toString() {
-        return "CommandTree{" +
-                "children=" + children +
-                ", value=" + value +
-                ", key=" + key +
-                ", params=" + params +
-                ", executor=" + executor +
-                '}';
-    }
+    private Requirement calculateRequirement(Map<String, Requirement> requirements) {
+        Requirement childRequirement = children.stream()
+                .map(c -> c.calculateRequirement(requirements)).filter(Objects::nonNull)
+                .reduce(Requirement::or)
+                .orElse(null);
 
-    private record ParamList(List<Param> list, int len) {
-        static ParamList readParams(String toParse) throws ParseException {
-            toParse = toParse.substring(1);
-            int len = 0;
-            List<Param> params = new ArrayList<>();
-            try {
-                while (toParse.trim().charAt(0) != '}') {
-                    while (toParse.startsWith(" ") || toParse.startsWith(",")) {
-                        len++;
-                        toParse = toParse.substring(1);
-                    }
-                    Param param = Param.readParam(toParse);
-                    params.add(param);
-                    toParse = toParse.substring(param.len);
-                    len += param.len;
-                }
-            } catch (IndexOutOfBoundsException e) {
-                throw new ParseException(toParse, toParse.length());
-            }
-            boolean hasType = params.stream().map(param -> param.key().value()).anyMatch(s -> s.equalsIgnoreCase("type"));
-            if (!hasType)
-                params.add(new Param(new Name("type", 0), new Name("literal", 0), 0));
-            return new ParamList(List.copyOf(params), len + 2);
+        if (childRequirement == null) {
+            if (requirement == null) return null;
+            Requirement requirement = requirements.get(this.requirement);
+            if (requirement == null) throw new IllegalArgumentException("Unknown requirement: " + this.requirement);
+            return requirement;
         }
 
-        public String toString() {
-            List<String> list = this.list.stream().map(Param::toString).sorted().toList();
-            return "{" + String.join(",", list) + "}";
-        }
+        if (requirement == null) return childRequirement;
 
-        Map<String, String> asMap() {
-            Map<String, String> map = new HashMap<>();
-            for (Param param : list) {
-                map.put(param.key().value(), param.value().value());
-            }
-            return Map.copyOf(map);
-        }
-    }
-
-    private record Param(Name key, Name value, int len) {
-        static Param readParam(String toParse) throws ParseException {
-            Name name = Name.readName(toParse, ":");
-            Name value = Name.readName(toParse.substring(name.len() + 1), "},", false);
-            return new Param(name, value, name.len() + value.len() + 1);
-        }
-
-        public String toString() {
-            return key.toString() + ":" + value.toString();
-        }
-    }
-
-    private record Name(String value, int len) {
-        static Name readName(String toParse, String endChars) throws ParseException {
-            return readName(toParse, endChars, true);
-        }
-
-        static Name readName(String toParse, String endChars, boolean blockSpaces) throws ParseException {
-            if (toParse.charAt(0) == '\'') {
-                Name param = readQuotedString(toParse, blockSpaces);
-                int len = param.len();
-                String remaining = toParse.substring(len);
-                if (remaining.isBlank()) return param;
-                if (endChars.contains(remaining.substring(0, 1))) return param;
-                throw new ParseException(toParse, len);
-            }
-            int min = toParse.length();
-            for (int i = 0; i < endChars.length(); i++) {
-                int index = toParse.indexOf(endChars.charAt(i));
-                if (index < 0) continue;
-                min = Math.min(index, min);
-            }
-            if (min == 0) throw new ParseException(toParse, 0);
-            return new Name(toParse.substring(0, min), min);
-        }
-
-        private static Name readQuotedString(String toParse, boolean blockSpaces) throws ParseException {
-            StringBuilder sb = new StringBuilder();
-            int len = 0;
-            boolean isEscaped = false;
-            for (int i = 1; i < toParse.length(); i++) {
-                len++;
-                if (!isEscaped && toParse.charAt(i) == '\\') {
-                    isEscaped = true;
-                    continue;
-                }
-                if (!isEscaped && toParse.charAt(i) == '\'') {
-                    break;
-                }
-                sb.append(toParse.charAt(i));
-                isEscaped = false;
-            }
-            if (blockSpaces && sb.toString().contains(" ")) {
-                throw new ParseException(sb.toString(), sb.indexOf(" "));
-            }
-            return new Name(sb.toString(), len + 1);
-        }
-
-        public String toString() {
-            return "'" + value.replace("'", "\\'") + "'";
-        }
+        Requirement requirement = requirements.get(this.requirement);
+        if (requirement == null) throw new IllegalArgumentException("Unknown requirement: " + this.requirement);
+        return childRequirement.and(requirement);
     }
 }

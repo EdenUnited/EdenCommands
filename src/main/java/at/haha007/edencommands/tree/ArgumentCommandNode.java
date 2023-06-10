@@ -3,6 +3,7 @@ package at.haha007.edencommands.tree;
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
+import at.haha007.edencommands.Requirement;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
@@ -30,7 +31,7 @@ public final class ArgumentCommandNode<T> extends CommandNode {
     private ArgumentCommandNode(@NotNull String key,
                                 Argument<T> argument,
                                 CommandExecutor defaultExecutor,
-                                Predicate<CommandContext> requirement,
+                                Requirement requirement,
                                 CommandExecutor executor,
                                 List<CommandNode> children) {
         super(children, executor, requirement, defaultExecutor);
@@ -82,7 +83,7 @@ public final class ArgumentCommandNode<T> extends CommandNode {
 
     public static final class ArgumentCommandBuilder<T> implements CommandBuilder<ArgumentCommandBuilder<T>> {
         private final List<CommandBuilder<?>> children = new ArrayList<>();
-        private final List<Predicate<CommandContext>> requirements = new ArrayList<>();
+        private final List<Requirement> requirements = new ArrayList<>();
         private CommandExecutor executor;
         private CommandExecutor defaultExecutor;
         @NotNull
@@ -138,7 +139,7 @@ public final class ArgumentCommandNode<T> extends CommandNode {
          * @return this
          */
         @NotNull
-        public ArgumentCommandBuilder<T> requires(@NotNull Predicate<CommandContext> requirement) {
+        public ArgumentCommandBuilder<T> requires(@NotNull Requirement requirement) {
             requirements.add(requirement);
             return this;
         }
@@ -162,10 +163,11 @@ public final class ArgumentCommandNode<T> extends CommandNode {
             for (Predicate<CommandContext> r : requirements) {
                 requirement = requirement.and(r);
             }
+            Requirement req = requirement::test;
             return new ArgumentCommandNode<>(key,
                     argument,
                     defaultExecutor,
-                    requirement,
+                    req,
                     executor,
                     children.stream().map(CommandBuilder::build).collect(Collectors.toList()));
         }
