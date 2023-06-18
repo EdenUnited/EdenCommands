@@ -26,27 +26,22 @@ class CommandTree {
 
     private final List<CommandTree> children = new ArrayList<>();
     private final String key;
-    private final String type;
     private CommandExecutor executor;
     private CommandExecutor defaultExecutor;
     private String requirement;
 
-    private CommandTree(String key, String type) {
+    private CommandTree(String key) {
         this.key = key;
-        this.type = type;
     }
 
     public static CommandTree root() {
-        return new CommandTree("root", "literal");
+        return new CommandTree("root");
     }
 
     public boolean add(@NotNull List<String> cmd, @Nullable String requirement, @NotNull CommandExecutor executor, boolean isDefault) {
-        String current = cmd.get(0);
+        String key = cmd.get(0);
         List<String> rest = cmd.subList(1, cmd.size());
-        int splitIndex = current.lastIndexOf(':');
-        String key = splitIndex < 0 ? current : current.substring(0, splitIndex);
-        String type = splitIndex < 0 ? "literal" : current.substring(splitIndex + 1);
-        if (!key.equals(this.key) || !type.equals(this.type)) return false;
+        if (!key.equals(this.key) ) return false;
         if (rest.isEmpty()) {
             if (isDefault)
                 this.defaultExecutor = executor;
@@ -58,12 +53,8 @@ class CommandTree {
         for (CommandTree child : children) {
             if (child.add(rest, requirement, executor, isDefault)) return true;
         }
-
-        current = rest.get(0);
-        splitIndex = current.lastIndexOf(':');
-        key = splitIndex < 0 ? current : current.substring(0, splitIndex);
-        type = splitIndex < 0 ? "literal" : current.substring(splitIndex + 1);
-        CommandTree child = new CommandTree(key, type);
+        key = rest.get(0);
+        CommandTree child = new CommandTree(key);
         children.add(child);
         return true;
     }
@@ -73,13 +64,12 @@ class CommandTree {
                                        Map<String, String> literalMapper,
                                        Map<String, Requirement> requirements) {
         CommandBuilder<?> cmd;
-        if (type.equals("literal")) {
+        if (argumentMap.containsKey(key)) {
+            Argument<?> argument = argumentMap.get(key);
+            cmd = ArgumentCommandNode.builder(key, argument);
+        } else {
             String mapped = literalMapper.getOrDefault(key, key);
             cmd = LiteralCommandNode.builder(mapped);
-        } else {
-            Argument<?> argument = argumentMap.get(type);
-            if (argument == null) throw new IllegalArgumentException("Unknown argument type: " + type);
-            cmd = ArgumentCommandNode.builder(key, argument);
         }
         if (executor != null) cmd.executor(executor);
         if (defaultExecutor != null) cmd.defaultExecutor(defaultExecutor);
@@ -111,5 +101,16 @@ class CommandTree {
         Requirement requirement = requirements.get(this.requirement);
         if (requirement == null) throw new IllegalArgumentException("Unknown requirement: " + this.requirement);
         return childRequirement.and(requirement);
+    }
+
+    @Override
+    public String toString() {
+        return "CommandTree{" +
+                "children=" + children +
+                ", key='" + key + '\'' +
+                ", executor=" + executor +
+                ", defaultExecutor=" + defaultExecutor +
+                ", requirement='" + requirement + '\'' +
+                '}';
     }
 }

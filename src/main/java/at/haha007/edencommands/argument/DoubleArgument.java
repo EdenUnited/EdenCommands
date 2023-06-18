@@ -65,7 +65,7 @@ public class DoubleArgument extends Argument<Double> {
     }
 
     private record TabCompleter(List<Completion<Double>> completions, List<Filter<Double>> filters)
-            implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
+            implements at.haha007.edencommands.TabCompleter {
         //format to 8 decimal places, 0.1+0.2 can be annoying
         private static final DecimalFormat format = new DecimalFormat("#.########");
 

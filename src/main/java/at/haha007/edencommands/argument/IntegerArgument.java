@@ -64,7 +64,7 @@ public class IntegerArgument extends Argument<Integer> {
     }
 
     private record TabCompleter(List<Completion<Integer>> completions, List<Filter<Integer>> filters)
-            implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
+            implements at.haha007.edencommands.TabCompleter {
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             CommandSender sender = context.sender();

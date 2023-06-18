@@ -27,7 +27,7 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
     @NotNull
     private final Function<String, Component> playerNotFoundErrorProvider;
 
-    private OfflinePlayerArgument(@Nullable Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter,
+    private OfflinePlayerArgument(@Nullable at.haha007.edencommands.TabCompleter tabCompleter,
                                   @Nullable TriState filterByName,
                                   @Nullable Function<String, Component> playerNotFoundErrorProvider) {
         super(tabCompleter == null ? new TabCompleter() : tabCompleter, filterByName == null || filterByName.toBooleanOrElse(true));
@@ -83,7 +83,7 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
         return new ParsedArgument<>(player, 1);
     }
 
-    private static class TabCompleter implements Function<CommandContext, java.util.List<com.destroystokyo.paper.event.server.AsyncTabCompleteEvent.Completion>> {
+    private static class TabCompleter implements at.haha007.edencommands.TabCompleter {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             List<String> completions = Bukkit.getOnlinePlayers().stream().map(HumanEntity::getName).toList();
             completions = new ArrayList<>(completions);
@@ -93,14 +93,14 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
     }
 
     public static class OfflinePlayerArgumentBuilder {
-        private Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter;
+        private at.haha007.edencommands.TabCompleter tabCompleter;
         private TriState filterByName;
         private Function<String, Component> playerNotFoundErrorProvider;
 
         OfflinePlayerArgumentBuilder() {
         }
 
-        public OfflinePlayerArgumentBuilder tabCompleter(Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter) {
+        public OfflinePlayerArgumentBuilder tabCompleter(at.haha007.edencommands.TabCompleter tabCompleter) {
             this.tabCompleter = tabCompleter;
             return this;
         }

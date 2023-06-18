@@ -30,7 +30,7 @@ public class PlayerArgument extends Argument<Player> {
     @NotNull
     private final Function<String, Component> playerNotFoundErrorProvider;
 
-    private PlayerArgument(@Nullable Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter,
+    private PlayerArgument(@Nullable at.haha007.edencommands.TabCompleter tabCompleter,
                            @Nullable TriState filterByName,
                            @Nullable TriState exact,
                            @Nullable Function<String, Component> playerNotFoundErrorProvider) {
@@ -81,7 +81,7 @@ public class PlayerArgument extends Argument<Player> {
         return new ParsedArgument<>(player, 1);
     }
 
-    private static class TabCompleter implements Function<CommandContext, java.util.List<com.destroystokyo.paper.event.server.AsyncTabCompleteEvent.Completion>> {
+    private static class TabCompleter implements at.haha007.edencommands.TabCompleter {
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             List<String> completions = Bukkit.getOnlinePlayers().stream().map(HumanEntity::getName).toList();
             completions = new ArrayList<>(completions);
@@ -91,7 +91,7 @@ public class PlayerArgument extends Argument<Player> {
     }
 
     public static class PlayerArgumentBuilder {
-        private Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter;
+        private at.haha007.edencommands.TabCompleter tabCompleter;
         private TriState filterByName;
         private TriState exact;
         private Function<String, Component> playerNotFoundErrorProvider;
@@ -99,7 +99,7 @@ public class PlayerArgument extends Argument<Player> {
         PlayerArgumentBuilder() {
         }
 
-        public PlayerArgumentBuilder tabCompleter(Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> tabCompleter) {
+        public PlayerArgumentBuilder tabCompleter(at.haha007.edencommands.TabCompleter tabCompleter) {
             this.tabCompleter = tabCompleter;
             return this;
         }

@@ -49,7 +49,7 @@ public class EnumArgument<T extends Enum<T>> extends Argument<T> {
     private record TabCompleter<T extends Enum<T>>(@NotNull Class<T> clazz,
                                                    @NotNull Function<T, Component> tooltipProvider,
                                                    @NotNull List<Filter<T>> filters)
-            implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
+            implements at.haha007.edencommands.TabCompleter {
 
         public List<AsyncTabCompleteEvent.Completion> apply(CommandContext context) {
             List<AsyncTabCompleteEvent.Completion> list = new ArrayList<>();

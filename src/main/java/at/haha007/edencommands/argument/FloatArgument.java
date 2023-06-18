@@ -65,7 +65,7 @@ public class FloatArgument extends Argument<Float> {
     }
 
     private record TabCompleter(List<Completion<Float>> completions, List<Filter<Float>> filters)
-            implements Function<CommandContext, List<AsyncTabCompleteEvent.Completion>> {
+            implements at.haha007.edencommands.TabCompleter {
         //format to 5 decimal places, 0.1+0.2 can be annoying
         private static final DecimalFormat format = new DecimalFormat("#.#####");
 
