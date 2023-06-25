@@ -1,6 +1,5 @@
 package at.haha007.edencommands.tree;
 
-import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandExecutor;
 import at.haha007.edencommands.Requirement;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
@@ -10,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class LiteralCommandNode extends CommandNode {
@@ -178,11 +176,7 @@ public final class LiteralCommandNode extends CommandNode {
          */
         @NotNull
         public LiteralCommandNode build() {
-            Predicate<CommandContext> requirement = c -> true;
-            for (Predicate<CommandContext> r : requirements) {
-                requirement = requirement.and(r);
-            }
-            Requirement req = requirement::test;
+            Requirement req = requirements.stream().reduce(Requirement::and).orElseGet(Requirement::alwaysTrue);
             return new LiteralCommandNode(literal,
                     tooltip,
                     children.stream().map(CommandBuilder::build).collect(Collectors.toList()),

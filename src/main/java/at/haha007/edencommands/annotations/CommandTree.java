@@ -56,6 +56,7 @@ class CommandTree {
         key = rest.get(0);
         CommandTree child = new CommandTree(key);
         children.add(child);
+        child.add(rest, requirement, executor, isDefault);
         return true;
     }
 
@@ -75,6 +76,10 @@ class CommandTree {
         if (defaultExecutor != null) cmd.defaultExecutor(defaultExecutor);
         Requirement requirement = calculateRequirement(requirements);
         if (requirement != null) cmd.requires(requirement);
+
+        for (CommandTree child : children) {
+            cmd.then(child.toCommand(argumentMap, literalMapper, requirements));
+        }
 
         return cmd;
     }

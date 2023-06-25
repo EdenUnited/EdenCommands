@@ -37,7 +37,7 @@ public class AnnotatedCommandLoader {
         literalMapper.put(literal, mappedLiteral);
     }
 
-    public List<? extends CommandBuilder<?>> getCommands() {
+    public List<CommandBuilder<?>> getCommands() {
         Map<String, Argument<?>> argumentMap = new HashMap<>();
         TabCompleter emptyTabCompleter = context -> List.of();
         this.argumentMap.forEach((key, value) -> {
@@ -57,7 +57,7 @@ public class AnnotatedCommandLoader {
 
         return root.getChildren().stream()
                 .map(tree -> tree.toCommand(argumentMap, literalMapper, requirementMap))
-                .toList();
+                .collect(Collectors.toList());
 
     }
 
@@ -100,8 +100,7 @@ public class AnnotatedCommandLoader {
         if (!method.isAnnotationPresent(CommandArgument.class)) {
             return;
         }
-        CommandArgument annotation =
-                method.getDeclaredAnnotation(CommandArgument.class);
+        CommandArgument annotation = method.getDeclaredAnnotation(CommandArgument.class);
         String key = annotation.value();
         if (key == null || key.isBlank()) {
             return;
@@ -117,21 +116,14 @@ public class AnnotatedCommandLoader {
         }
 
         method.setAccessible(true);
-        TabCompleter tabCompleter;
-        try {
-            tabCompleter = (context) -> {
-                try {
-                    //noinspection unchecked
-                    return (List<Completion>) method.invoke(obj, context);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                    return List.of();
-                }
-            };
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Method does not return a List<String> or String[]!");
-        }
-        tabCompleters.put(key, tabCompleter);
+        ArgumentParser argument = c -> {
+            try {
+                return (ParsedArgument<?>) method.invoke(obj, c);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        argumentMap.put(key, argument);
     }
 
     private void registerArgument(Field field, Object obj) {
@@ -150,10 +142,10 @@ public class AnnotatedCommandLoader {
         try {
             field.setAccessible(true);
             Object o = field.get(obj);
-            if(o == null) {
+            if (o == null) {
                 throw new IllegalArgumentException("ArgumentParser field is null!");
             }
-            if(!field.getType().isInstance(o)) {
+            if (!field.getType().isInstance(o)) {
                 throw new IllegalArgumentException("ArgumentParser field is not of type ArgumentParser!");
             }
             ArgumentParser parser = (ArgumentParser) o;
@@ -176,7 +168,7 @@ public class AnnotatedCommandLoader {
         key = key.trim();
         Class<?> outputType = method.getReturnType();
         if (!(outputType == List.class)) {
-            throw new IllegalArgumentException("Method does not return a List<String> or String[]!");
+            throw new IllegalArgumentException("Method does not return a List<AsyncTabCompleteEvent.Completion>!");
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != 1 || parameterTypes[0] != CommandContext.class) {
@@ -216,10 +208,10 @@ public class AnnotatedCommandLoader {
         TabCompleter tabCompleter;
         try {
             Object o = field.get(obj);
-            if(o == null) {
+            if (o == null) {
                 throw new IllegalArgumentException("TabCompleter field is null!");
             }
-            if(!field.getType().isInstance(o)) {
+            if (!field.getType().isInstance(o)) {
                 throw new IllegalArgumentException("TabCompleter field is not of type TabCompleter!");
             }
             tabCompleter = (TabCompleter) o;
@@ -292,7 +284,7 @@ public class AnnotatedCommandLoader {
         if (command == null) {
             return;
         }
-        List<String> list = Arrays.stream(command.trim().split("\\W+")).toList();
+        List<String> list = Arrays.stream(command.trim().split("\\s+")).toList();
         list = new LinkedList<>(list);
         list.add(0, "root");
         boolean sync = getAnnotationSync(method);
@@ -304,7 +296,6 @@ public class AnnotatedCommandLoader {
                 .map(CommandRequirement::value).map(s -> s.isEmpty() ? null : s.trim()).orElse(null);
 
         boolean asDefaultCommand = method.isAnnotationPresent(DefaultExecutor.class);
-        System.out.println("Registering command " + list + " with requirement " + requirement + " and executor " + executor);
         this.root.add(list, requirement, executor, asDefaultCommand);
     }
 
@@ -313,7 +304,7 @@ public class AnnotatedCommandLoader {
         if (command == null) {
             return;
         }
-        List<String> list = Arrays.stream(command.trim().split("\\W+")).toList();
+        List<String> list = Arrays.stream(command.trim().split("\\s+")).toList();
 
         boolean sync = getAnnotationSync(field);
         field.setAccessible(true);
@@ -353,9 +344,7 @@ public class AnnotatedCommandLoader {
 
     private void addAnnotatedSilent(Method method, Object obj) {
         try {
-            System.out.println("Adding method " + method.getName() + " to command tree!");
             addAnnotated(method, obj);
-            System.out.println(root);
         } catch (IllegalArgumentException ignored) {
             System.err.println("Failed to add method " + method.getName() + " to command tree!");
         }
@@ -415,5 +404,17 @@ public class AnnotatedCommandLoader {
                 .map(Command::value).orElse("");
         if (sub.isBlank()) return null;
         return root + " " + sub;
+    }
+
+    @Override
+    public String toString() {
+        return "AnnotatedCommandLoader{" +
+                "root=" + root +
+                ", tabCompleters=" + tabCompleters +
+                ", argumentMap=" + argumentMap +
+                ", requirementMap=" + requirementMap +
+                ", plugin=" + plugin +
+                ", literalMapper=" + literalMapper +
+                '}';
     }
 }

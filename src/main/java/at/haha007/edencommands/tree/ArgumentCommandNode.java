@@ -1,6 +1,5 @@
 package at.haha007.edencommands.tree;
 
-import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import at.haha007.edencommands.Requirement;
@@ -11,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class ArgumentCommandNode<T> extends CommandNode {
@@ -159,15 +157,11 @@ public final class ArgumentCommandNode<T> extends CommandNode {
          */
         @NotNull
         public ArgumentCommandNode<T> build() {
-            Predicate<CommandContext> requirement = c -> true;
-            for (Predicate<CommandContext> r : requirements) {
-                requirement = requirement.and(r);
-            }
-            Requirement req = requirement::test;
+            Requirement requirement = requirements.stream().reduce(Requirement::and).orElseGet(Requirement::alwaysTrue);
             return new ArgumentCommandNode<>(key,
                     argument,
                     defaultExecutor,
-                    req,
+                    requirement,
                     executor,
                     children.stream().map(CommandBuilder::build).collect(Collectors.toList()));
         }
