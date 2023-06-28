@@ -42,10 +42,10 @@ public final class ArgumentCommandNode<T> extends CommandNode {
             return List.of();
         try {
             ParsedArgument<T> parse = argument.parse(context.build());
-            context = context.next(parse.pointerIncrements() - 1);
             context.putArgument(key, parse);
             if (context.hasNext()) {
-                return super.tabComplete(context.next(parse.pointerIncrements() - 1));
+                context = context.next(parse.pointerIncrements() - 1); // jump to the last index of the argument
+                return super.tabComplete(context);
             }
             return argument.tabComplete(context.build());
         } catch (CommandException e1) {

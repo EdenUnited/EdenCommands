@@ -2,6 +2,7 @@ package at.haha007.edencommands;
 
 import org.bukkit.command.CommandSender;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -15,7 +16,10 @@ import java.util.Map;
  *                         "/command foo bar"
  *                         0     1   2
  */
-public record CommandContext(CommandSender sender, String[] input, Map<String, ?> parsedParameters, int pointer) {
+public record CommandContext(CommandSender sender,
+                             String[] input,
+                             Map<String, Parameter<?>> parsedParameters,
+                             int pointer) {
 
     /**
      * @param key the key of the @{@link at.haha007.edencommands.tree.ArgumentCommandNode} that parsed the value
@@ -26,10 +30,25 @@ public record CommandContext(CommandSender sender, String[] input, Map<String, ?
      */
     @SuppressWarnings("unchecked")
     public <T> T parameter(String key) {
-        Object argument = parsedParameters.get(key);
-        if (argument == null) {
+        Parameter<?> parameter = parsedParameters.get(key);
+        if (parameter == null) {
             throw new IllegalArgumentException("There is no argument with this key: '" + key + "'");
         }
-        return (T) argument;
+        return (T) parameter.arg();
+    }
+
+
+    public String parameterString(String key) {
+        Parameter<?> parameter = parsedParameters.get(key);
+        if (parameter == null) {
+            throw new IllegalArgumentException("There is no argument with this key: '" + key + "'");
+        }
+        String[] arr = Arrays.copyOfRange(input, parameter.from(), parameter.to() + 1);
+        return String.join(" ", arr);
+    }
+
+
+    //both ends inclusive
+    public record Parameter<T>(T arg, int from, int to) {
     }
 }

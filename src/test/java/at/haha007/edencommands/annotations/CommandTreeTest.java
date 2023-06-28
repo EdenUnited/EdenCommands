@@ -69,6 +69,16 @@ class CommandTreeTest {
             return new ParsedArgument<>(context.input()[context.pointer()], 1);
         }
 
+        @TabCompleter("§argb")
+        private List<Completion> completeb(CommandContext context) {
+            return Stream.of("d", "e", "f").map(Completion::completion).toList();
+        }
+
+        @CommandArgument("§argb")
+        private ParsedArgument<String> parseb(CommandContext context) {
+            return new ParsedArgument<>(context.input()[context.pointer()], 1);
+        }
+
 
         @Command("cmd")
         @DefaultExecutor
@@ -80,6 +90,13 @@ class CommandTreeTest {
         @Command("cmd §arg")
         private void arg(CommandContext context) {
             state = context.parameter("§arg");
+        }
+
+        @Command("cmd §arg §argb")
+        private void argb(CommandContext context) {
+            String a = context.parameter("§arg");
+            String b = context.parameterString("§argb");
+            System.out.printf("a: %s         b: %s%n", a, b);
         }
     }
 
@@ -192,6 +209,30 @@ class CommandTreeTest {
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("b"));
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("c"));
 
+        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd", "text"}));
+        Assertions.assertEquals("text", ArgumentTestCommand.state);
+        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd"}));
+        Assertions.assertNull(ArgumentTestCommand.state);
+    }
+
+    @Test
+    void argumentTest2() {
+        ArgumentTestCommand test = new ArgumentTestCommand();
+        CommandSender mockSender = Mockito.mock(CommandSender.class);
+        JavaPlugin mockPlugin = Mockito.mock(JavaPlugin.class);
+        AnnotatedCommandLoader loader = new AnnotatedCommandLoader(mockPlugin);
+        loader.addAnnotated(test);
+        CommandBuilder<?> builder = loader.getCommands().get(0);
+        Assertions.assertNotNull(builder);
+        CommandNode cmd = builder.build();
+
+        List<Completion> tabArgs = cmd.tabComplete(new ContextBuilder(mockSender, new String[]{"cmd", "a", ""}));
+        Assertions.assertEquals(3, tabArgs.size());
+        Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("d"));
+        Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("e"));
+        Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("f"));
+
+        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd", "text", "abc"}));
         cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd", "text"}));
         Assertions.assertEquals("text", ArgumentTestCommand.state);
         cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd"}));
