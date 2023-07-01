@@ -1,10 +1,7 @@
 package at.haha007.edencommands.annotations;
 
 import at.haha007.edencommands.CommandContext;
-import at.haha007.edencommands.annotations.annotations.Command;
-import at.haha007.edencommands.annotations.annotations.CommandArgument;
-import at.haha007.edencommands.annotations.annotations.DefaultExecutor;
-import at.haha007.edencommands.annotations.annotations.TabCompleter;
+import at.haha007.edencommands.annotations.annotations.*;
 import at.haha007.edencommands.argument.ParsedArgument;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.CommandNode;
@@ -59,6 +56,7 @@ class CommandTreeTest {
     private static final class ArgumentTestCommand {
         static String state;
 
+
         @TabCompleter("§arg")
         private List<Completion> complete(CommandContext context) {
             return Stream.of("a", "b", "c").map(Completion::completion).toList();
@@ -75,9 +73,7 @@ class CommandTreeTest {
         }
 
         @CommandArgument("§argb")
-        private ParsedArgument<String> parseb(CommandContext context) {
-            return new ParsedArgument<>(context.input()[context.pointer()], 1);
-        }
+        private ArgumentParser parseb = (CommandContext context) -> new ParsedArgument<>(context.input()[context.pointer()], 1);
 
 
         @Command("cmd")

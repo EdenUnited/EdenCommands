@@ -1,6 +1,6 @@
 package at.haha007.edencommands.annotations;
 
-import at.haha007.edencommands.annotations.annotations.Command;
+import at.haha007.edencommands.annotations.annotations.*;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -8,10 +8,8 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
+import javax.lang.model.type.ReferenceType;
 import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
 import java.util.List;
@@ -23,11 +21,16 @@ import java.util.Set;
 public class SntaxCheckerProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        roundEnv.getElementsAnnotatedWith(Command.class).forEach(this::checkAnnotatedElement);
+        roundEnv.getElementsAnnotatedWith(Command.class).forEach(this::checkCommandAnnotation);
+        roundEnv.getElementsAnnotatedWith(CommandArgument.class).forEach(this::checkCommandArgumentAnnotation);
+        roundEnv.getElementsAnnotatedWith(CommandRequirement.class).forEach(this::checkCommandRequirementAnnotation);
+        roundEnv.getElementsAnnotatedWith(TabCompleter.class).forEach(this::checkTabCompleterAnnotation);
+        roundEnv.getElementsAnnotatedWith(SyncCommand.class).forEach(this::checkSyncCommandAnnotation);
+        roundEnv.getElementsAnnotatedWith(DefaultExecutor.class).forEach(this::checkDefaultExecutor);
         return false;
     }
 
-    private void checkAnnotatedElement(Element element) {
+    private void checkCommandAnnotation(Element element) {
         Command command = element.getAnnotation(Command.class);
         if (command == null) {
             return;
@@ -65,6 +68,170 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
         if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "CommandExecutors have to have only CommandContext as parameter", element);
         }
+    }
+
+    private void checkCommandArgumentAnnotation(Element element) {
+        CommandArgument command = element.getAnnotation(CommandArgument.class);
+        if (command == null) {
+            return;
+        }
+        if (command.value().isBlank()) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key cannot be empty", element);
+            return;
+        }
+        if (command.value().matches(".*\\s.*")) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key must not contain whitespace", element);
+            return;
+        }
+
+        //has to return void and have CommandContext as parameter
+        if (element.getKind() == ElementKind.FIELD) {
+            VariableElement field = (VariableElement) element;
+            ReferenceType type = (ReferenceType) field.asType();
+            if (!type.toString().equals("at.haha007.edencommands.annotations.annotations.ArgumentParser")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments has to be ArgumentParser but is " + type, element);
+                return;
+            }
+        }
+        if (element.getKind() == ElementKind.METHOD) {
+            ExecutableElement method = (ExecutableElement) element;
+            String returnType = method.getReturnType().toString();
+            returnType = returnType.substring(0, returnType.indexOf("<"));
+
+            if (!returnType.equals("at.haha007.edencommands.argument.ParsedArgument")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments have to return ParsedArgument but is returning " + method.getReturnType().toString(), element);
+                return;
+            }
+            if (method.getParameters().size() != 1) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have only CommandContext as parameter", element);
+                return;
+            }
+            if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have to have only CommandContext as parameter", element);
+            }
+        }
+    }
+
+    private void checkTabCompleterAnnotation(Element element) {
+        TabCompleter command = element.getAnnotation(TabCompleter.class);
+        if (command == null) {
+            return;
+        }
+        if (command.value().isBlank()) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "TabCompleter key cannot be empty", element);
+            return;
+        }
+        if (command.value().matches(".*\\s.*")) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "TabCompleter key must not contain whitespace", element);
+            return;
+        }
+
+        //has to return void and have CommandContext as parameter
+        if (element.getKind() == ElementKind.FIELD) {
+            VariableElement field = (VariableElement) element;
+            ReferenceType type = (ReferenceType) field.asType();
+            if (!type.toString().equals("at.haha007.edencommands.TabCompleter")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments has to be ArgumentParser but is " + type, element);
+                return;
+            }
+        }
+        if (element.getKind() == ElementKind.METHOD) {
+            ExecutableElement method = (ExecutableElement) element;
+            String returnType = method.getReturnType().toString();
+
+            if (!returnType.equals("java.util.List<com.destroystokyo.paper.event.server.AsyncTabCompleteEvent.Completion>")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments have to return List<AsyncTabCompleteEvent.Completion> but is returning " + returnType, element);
+                return;
+            }
+            if (method.getParameters().size() != 1) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have only CommandContext as parameter", element);
+                return;
+            }
+            if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have to have only CommandContext as parameter", element);
+            }
+        }
+    }
+
+    private void checkCommandRequirementAnnotation(Element element) {
+        CommandRequirement annotation = element.getAnnotation(CommandRequirement.class);
+        if (annotation == null) {
+            return;
+        }
+        if (annotation.value().isBlank()) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key cannot be empty", element);
+            return;
+        }
+        if (annotation.value().matches(".*\\s.*")) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key must not contain whitespace", element);
+            return;
+        }
+
+        //commands get checked in another method
+        if (element.getAnnotation(Command.class) != null)
+            return;
+
+
+        //has to return void and have CommandContext as parameter
+        if (element.getKind() == ElementKind.FIELD) {
+            VariableElement field = (VariableElement) element;
+            ReferenceType type = (ReferenceType) field.asType();
+            if (!type.toString().equals("at.haha007.edencommands.Requirement")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Requirement has to be Requirement but is " + type, element);
+                return;
+            }
+        }
+        if (element.getKind() == ElementKind.METHOD) {
+            ExecutableElement method = (ExecutableElement) element;
+            String returnType = method.getReturnType().toString();
+            returnType = returnType.substring(0, returnType.indexOf("<"));
+
+            if (!returnType.equals("boolean")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments have to return ParsedArgument but is returning " + method.getReturnType().toString(), element);
+                return;
+            }
+            if (method.getParameters().size() != 1) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have only CommandContext as parameter", element);
+                return;
+            }
+            if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have to have only CommandContext as parameter", element);
+            }
+        }
+    }
+
+    private void checkSyncCommandAnnotation(Element element) {
+        SyncCommand annotation = element.getAnnotation(SyncCommand.class);
+        if (annotation == null) {
+            return;
+        }
+
+        if (element.getKind() == ElementKind.CLASS) {
+            if (element.getEnclosedElements().stream().anyMatch(e -> e.getAnnotation(Command.class) != null))
+                return;
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "SyncCommand must also be annotated with @Command", element);
+            return;
+        }
+        if (element.getAnnotation(Command.class) != null)
+            return;
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "SyncCommand must also be annotated with @Command", element);
+    }
+
+    private void checkDefaultExecutor(Element element) {
+        DefaultExecutor annotation = element.getAnnotation(DefaultExecutor.class);
+        if (annotation == null) {
+            return;
+        }
+
+        if (element.getKind() == ElementKind.CLASS) {
+            if (element.getEnclosedElements().stream().anyMatch(e -> e.getAnnotation(Command.class) != null))
+                return;
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "DefaultExecutor must also be annotated with @Command", element);
+            return;
+        }
+        if (element.getAnnotation(Command.class) != null)
+            return;
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "DefaultExecutor must also be annotated with @Command", element);
     }
 
 }

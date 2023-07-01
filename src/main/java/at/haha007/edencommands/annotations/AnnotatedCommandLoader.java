@@ -108,7 +108,7 @@ public class AnnotatedCommandLoader {
         key = key.trim();
         Class<?> outputType = method.getReturnType();
         if (!(outputType == ParsedArgument.class)) {
-            throw new IllegalArgumentException("Method does not return a List<String> or String[]!");
+            throw new IllegalArgumentException("Method does not return a ParsedArgument!");
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != 1 || parameterTypes[0] != CommandContext.class) {
@@ -188,7 +188,7 @@ public class AnnotatedCommandLoader {
                 }
             };
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Method does not return a List<String> or String[]!");
+            throw new IllegalArgumentException("Method does not return a List<AsyncTabCompleteEvent.Completion!");
         }
         tabCompleters.put(key, tabCompleter);
     }
