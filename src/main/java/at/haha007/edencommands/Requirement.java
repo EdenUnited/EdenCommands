@@ -2,9 +2,7 @@ package at.haha007.edencommands;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Predicate;
-
-public interface Requirement extends Predicate<CommandContext> {
+public interface Requirement {
     static Requirement alwaysTrue() {
         return new TrueRequirement();
     }
@@ -14,15 +12,18 @@ public interface Requirement extends Predicate<CommandContext> {
     }
 
     default Requirement or(@NotNull Requirement other) {
-        return (t) -> test(t) || other.test(t);
+        return t -> test(t) || other.test(t);
     }
 
     default Requirement and(@NotNull Requirement other) {
-        return (t) -> test(t) && other.test(t);
+        return t -> test(t) && other.test(t);
     }
 
+    boolean test(CommandContext t);
+
+    @NotNull
     default Requirement negate() {
-        return (t) -> !test(t);
+        return t -> !test(t);
     }
 }
 

@@ -79,19 +79,19 @@ public class StringArgument extends Argument<String> {
             if (!s.startsWith("\""))
                 throw new CommandException(error, null);
 
-            s = s.replaceAll("\\\\\"", "\"");
+            s = s.replace("\\\\\"", "\"");
             sb.append(s);
             sb.deleteCharAt(0);
             int amount = 1;
             while (itr.hasNext() && !isEnd) {
                 s = itr.next();
                 isEnd = s.endsWith("\"") && !s.endsWith("\\\"");
-                s = s.replaceAll("\\\\\"", "\"");
+                s = s.replace("\\\\\"", "\"");
                 sb.append(" ").append(s);
                 amount++;
             }
 
-            if (sb.length() == 0)
+            if (sb.isEmpty())
                 throw new CommandException(error, null);
 
             if (sb.charAt(sb.length() - 1) != '\"')
@@ -139,13 +139,8 @@ public class StringArgument extends Argument<String> {
         }
 
         public StringArgument build() {
-            List<AsyncTabCompleteEvent.Completion> completions = switch (this.completions == null ? 0 : this.completions.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.completions.get(0));
-                default -> List.copyOf(this.completions);
-            };
-
-            return new StringArgument(parser, completions, filterByName);
+            List<AsyncTabCompleteEvent.Completion> completionList = this.completions == null ? Collections.emptyList() : List.copyOf(this.completions);
+            return new StringArgument(parser, completionList, filterByName);
         }
 
         public String toString() {

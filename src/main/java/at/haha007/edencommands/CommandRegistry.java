@@ -11,7 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
@@ -24,13 +24,13 @@ import java.util.function.Predicate;
 public class CommandRegistry implements Listener {
 
     private final Map<String, NodeCommand> registeredCommands = new HashMap<>();
-    private final Plugin plugin;
+    private final JavaPlugin plugin;
 
     /**
      * @param plugin the plugin which to register the commands for.
      *               used to create the plugin-aliased command - "/plugin:command"
      */
-    public CommandRegistry(@NotNull Plugin plugin) {
+    public CommandRegistry(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -42,6 +42,10 @@ public class CommandRegistry implements Listener {
         registeredCommands.values().forEach(c -> Bukkit.getCommandMap().getKnownCommands().values().remove(c));
         registeredCommands.clear();
         HandlerList.unregisterAll(this);
+    }
+
+    public JavaPlugin getPlugin() {
+        return plugin;
     }
 
     /**
@@ -78,7 +82,7 @@ public class CommandRegistry implements Listener {
 
         NodeCommand command = registeredCommands.get(args[0].toLowerCase());
         if (command == null) return;
-        ContextBuilder context = new ContextBuilder(event.getSender(), args);
+        ContextBuilder context = new ContextBuilder(plugin, event.getSender(), args);
         List<AsyncTabCompleteEvent.Completion> completions = command.tabCompleter().apply(context);
         completions = completions.stream().distinct().sorted(Comparator.comparing(AsyncTabCompleteEvent.Completion::suggestion)).toList();
         event.completions(completions);
@@ -141,27 +145,24 @@ public class CommandRegistry implements Listener {
         @Override
         @NotNull
         public Function<ContextBuilder, List<AsyncTabCompleteEvent.Completion>> tabCompleter() {
-            return context -> {
-                List<AsyncTabCompleteEvent.Completion> completions = rootNode.tabComplete(context);
-                return completions == null ? List.of() : completions;
-            };
+            return rootNode::tabComplete;
         }
 
         public boolean execute(@NotNull CommandSender sender, @NotNull String label, String[] args) {
             String[] input = new String[args.length + 1];
             input[0] = rootNode.literal();
             System.arraycopy(args, 0, input, 1, args.length);
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                rootNode.execute(new ContextBuilder(sender, input));
-            });
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> rootNode.execute(new ContextBuilder(plugin, sender, input)));
             return true;
         }
 
+        @Override
         public boolean testPermissionSilent(@NotNull CommandSender target) {
-            ContextBuilder contextBuilder = new ContextBuilder(target, new String[]{rootNode.literal()});
+            ContextBuilder contextBuilder = new ContextBuilder(plugin, target, new String[]{rootNode.literal()});
             return rootNode.testRequirement(contextBuilder.build());
         }
 
+        @Override
         @NotNull
         public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args)
                 throws IllegalArgumentException {

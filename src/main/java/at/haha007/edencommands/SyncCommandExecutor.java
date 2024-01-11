@@ -34,7 +34,8 @@ public class SyncCommandExecutor implements CommandExecutor {
             CommandException ex = r.get();
             if (ex != null) throw ex;
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            plugin.getLogger().throwing(getClass().getSimpleName(), "execute", e);
+            Thread.currentThread().interrupt();
             throw new CommandException(Component.text("Error while executing command, please look in the console!"), context);
         }
     }

@@ -77,7 +77,7 @@ public class BooleanArgument extends Argument<Boolean> {
             return this;
         }
 
-        public BooleanArgumentBuilder modes(Collection<? extends BooleanMode> modes) {
+        public BooleanArgumentBuilder modes(Collection<BooleanMode> modes) {
             if (this.modes == null) this.modes = new ArrayList<>();
             this.modes.addAll(modes);
             return this;
@@ -95,13 +95,8 @@ public class BooleanArgument extends Argument<Boolean> {
         }
 
         public BooleanArgument build() {
-            List<BooleanMode> modes = switch (this.modes == null ? 0 : this.modes.size()) {
-                case 0 -> java.util.Collections.emptyList();
-                case 1 -> java.util.Collections.singletonList(this.modes.get(0));
-                default -> List.copyOf(this.modes);
-            };
-
-            return new BooleanArgument(notBooleanError, modes, filterByName);
+            List<BooleanMode> booleanModes = modes == null ? List.of(BooleanMode.TRUE_FALSE) : modes;
+            return new BooleanArgument(notBooleanError, booleanModes, filterByName);
         }
 
         public String toString() {

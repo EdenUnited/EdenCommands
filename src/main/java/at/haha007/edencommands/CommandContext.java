@@ -51,4 +51,37 @@ public record CommandContext(CommandSender sender,
     //both ends inclusive
     public record Parameter<T>(T arg, int from, int to) {
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CommandContext that = (CommandContext) o;
+
+        if (pointer != that.pointer) return false;
+        if (!sender.equals(that.sender)) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(input, that.input)) return false;
+        return parsedParameters.equals(that.parsedParameters);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = sender.hashCode();
+        result = 31 * result + Arrays.hashCode(input);
+        result = 31 * result + parsedParameters.hashCode();
+        result = 31 * result + pointer;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandContext{" +
+                "sender=" + sender +
+                ", input=" + Arrays.toString(input) +
+                ", parsedParameters=" + parsedParameters +
+                ", pointer=" + pointer +
+                '}';
+    }
 }

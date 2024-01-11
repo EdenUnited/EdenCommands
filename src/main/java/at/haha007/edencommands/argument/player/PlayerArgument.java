@@ -72,13 +72,13 @@ public class PlayerArgument extends Argument<Player> {
                     throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
                 return new ParsedArgument<>(player, 1);
             }
+            default -> {
+                Player player = exact ? Bukkit.getPlayerExact(key) : Bukkit.getPlayer(key);
+                if (player == null)
+                    throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
+                return new ParsedArgument<>(player, 1);
+            }
         }
-
-
-        Player player = exact ? Bukkit.getPlayerExact(key) : Bukkit.getPlayer(key);
-        if (player == null)
-            throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
-        return new ParsedArgument<>(player, 1);
     }
 
     private static class TabCompleter implements at.haha007.edencommands.TabCompleter {
@@ -124,7 +124,12 @@ public class PlayerArgument extends Argument<Player> {
         }
 
         public String toString() {
-            return "PlayerArgument.PlayerArgumentBuilder(tabCompleter=" + this.tabCompleter + ", filterByName=" + this.filterByName + ", exact=" + this.exact + ", playerNotFoundErrorProvider=" + this.playerNotFoundErrorProvider + ")";
+            return "PlayerArgument.PlayerArgumentBuilder(" +
+                    "tabCompleter=" + this.tabCompleter +
+                    ", filterByName=" + this.filterByName +
+                    ", exact=" + this.exact +
+                    ", playerNotFoundErrorProvider=" + this.playerNotFoundErrorProvider +
+                    ")";
         }
     }
 }

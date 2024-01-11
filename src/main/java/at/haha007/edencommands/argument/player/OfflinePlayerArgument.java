@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
     private static final Random random = new Random();
@@ -69,18 +68,20 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
                     throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
                 return new ParsedArgument<>(player, 1);
             }
+            default -> {
+                OfflinePlayer player;
+                try {
+                    UUID uuid = UUID.fromString(key);
+                    player = Bukkit.getOfflinePlayer(uuid);
+                } catch (IllegalArgumentException e) {
+                    player = Bukkit.getOfflinePlayer(key);
+                }
+                //if the player has never been on the server throw
+                if (player.getLastSeen() == 0)
+                    throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
+                return new ParsedArgument<>(player, 1);
+            }
         }
-        OfflinePlayer player;
-        try {
-            UUID uuid = UUID.fromString(key);
-            player = Bukkit.getOfflinePlayer(uuid);
-        } catch (IllegalArgumentException e) {
-            player = Bukkit.getOfflinePlayer(key);
-        }
-        //if the player has never been on the server throw
-        if (player.getLastSeen() == 0)
-            throw new CommandException(playerNotFoundErrorProvider.apply(key), context);
-        return new ParsedArgument<>(player, 1);
     }
 
     private static class TabCompleter implements at.haha007.edencommands.TabCompleter {
@@ -88,7 +89,7 @@ public class OfflinePlayerArgument extends Argument<OfflinePlayer> {
             List<String> completions = Bukkit.getOnlinePlayers().stream().map(HumanEntity::getName).toList();
             completions = new ArrayList<>(completions);
             completions.addAll(List.of("@p", "@r", "@s"));
-            return completions.stream().map(AsyncTabCompleteEvent.Completion::completion).collect(Collectors.toList());
+            return completions.stream().map(AsyncTabCompleteEvent.Completion::completion).toList();
         }
     }
 

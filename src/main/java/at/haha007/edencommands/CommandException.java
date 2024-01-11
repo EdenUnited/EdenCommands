@@ -6,9 +6,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class CommandException extends Exception {
     @Nullable
-    private final Component errorMessage;
+    private final transient Component errorMessage;
     @Nullable
-    private final CommandContext context;
+    private final transient CommandContext context;
 
     public CommandException(@Nullable Component errorMessage, @Nullable CommandContext context) {
         this.errorMessage = errorMessage;
@@ -20,7 +20,8 @@ public class CommandException extends Exception {
             sender.sendMessage(errorMessage);
     }
 
-    public @Nullable CommandContext context() {
+    @Nullable
+    public CommandContext context() {
         return this.context;
     }
 }

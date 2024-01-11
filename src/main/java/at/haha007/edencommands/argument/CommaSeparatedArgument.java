@@ -43,7 +43,7 @@ public class CommaSeparatedArgument<T> extends Argument<List<T>> {
             String[] args = key.split(",", -1);
             Set<String> blocked = Arrays.stream(args).map(String::toLowerCase).collect(Collectors.toSet());
             String argsStr = String.join(",", Arrays.copyOfRange(args, 0, args.length - 1));
-            String start = argsStr.length() > 0 ? argsStr + "," : argsStr;
+            String start = !argsStr.isEmpty() ? argsStr + "," : argsStr;
             context.input()[context.pointer()] = args[args.length - 1];
             List<AsyncTabCompleteEvent.Completion> completions = argument.tabComplete(context);
             Stream<AsyncTabCompleteEvent.Completion> stream = completions.stream();
@@ -51,7 +51,7 @@ public class CommaSeparatedArgument<T> extends Argument<List<T>> {
                 stream = stream.filter(s -> !blocked.contains(s.suggestion().toLowerCase()));
             }
             return stream.map(c -> AsyncTabCompleteEvent.Completion.completion(start + c.suggestion(), c.tooltip()))
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 }

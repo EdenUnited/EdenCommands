@@ -195,22 +195,18 @@ public class IntegerArgument extends Argument<Integer> {
         }
 
         public IntegerArgument build() {
-            List<Filter<Integer>> filters = switch (this.filters == null ? 0 : this.filters.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.filters.get(0));
-                default -> List.copyOf(this.filters);
-            };
-            List<Completion<Integer>> completions = switch (this.completions == null ? 0 : this.completions.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.completions.get(0));
-                default -> List.copyOf(this.completions);
-            };
-
-            return new IntegerArgument(filters, notIntegerMessage, completions, filterByName);
+            List<Filter<Integer>> filterList = this.filters == null ? Collections.emptyList() : List.copyOf(this.filters);
+            List<Completion<Integer>> completionList = this.completions == null ? Collections.emptyList() : List.copyOf(this.completions);
+            return new IntegerArgument(filterList, notIntegerMessage, completionList, filterByName);
         }
 
         public String toString() {
-            return "IntegerArgument.IntegerArgumentBuilder(filters=" + this.filters + ", notIntegerMessage=" + this.notIntegerMessage + ", completions=" + this.completions + ", filterByName=" + this.filterByName + ")";
+            return "IntegerArgument.IntegerArgumentBuilder(" +
+                    "filters=" + this.filters
+                    + ", notIntegerMessage=" + this.notIntegerMessage
+                    + ", completions=" + this.completions
+                    + ", filterByName=" + this.filterByName
+                    + ")";
         }
     }
 }

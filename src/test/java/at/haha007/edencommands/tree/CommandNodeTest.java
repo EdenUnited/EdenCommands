@@ -19,7 +19,7 @@ class CommandNodeTest {
     @Test
     void tabLiteral() {
         LiteralCommandNode node = LiteralCommandNode.builder("test").then(LiteralCommandNode.builder("arg")).build();
-        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(sender, new String[]{"test", ""}));
+        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(null, sender, new String[]{"test", ""}));
         Assertions.assertEquals(1, completes.size());
         Assertions.assertEquals("arg", completes.get(0).suggestion());
     }
@@ -37,7 +37,7 @@ class CommandNodeTest {
                 .build();
 
         LiteralCommandNode node = LiteralCommandNode.builder("test").then(ArgumentCommandNode.builder("arg", argument)).build();
-        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(sender, new String[]{"test", ""}));
+        List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(null, sender, new String[]{"test", ""}));
         Assertions.assertEquals(3, completes.size());
         Assertions.assertEquals("0.1", completes.get(0).suggestion());
     }

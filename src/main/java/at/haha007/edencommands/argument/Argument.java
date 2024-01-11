@@ -18,7 +18,7 @@ public abstract class Argument<T> {
      */
     private final boolean filterByName;
 
-    public Argument(@NotNull TabCompleter tabCompleter, boolean filterByName) {
+    protected Argument(@NotNull TabCompleter tabCompleter, boolean filterByName) {
         this.tabCompleter = tabCompleter;
         this.filterByName = filterByName;
     }

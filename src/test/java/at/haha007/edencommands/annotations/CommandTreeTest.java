@@ -73,7 +73,7 @@ class CommandTreeTest {
         }
 
         @CommandArgument("§argb")
-        private ArgumentParser parseb = (CommandContext context) -> new ParsedArgument<>(context.input()[context.pointer()], 1);
+        private final ArgumentParser<String> parseb = context -> new ParsedArgument<>(context.input()[context.pointer()], 1);
 
 
         @Command("cmd")
@@ -118,25 +118,25 @@ class CommandTreeTest {
             if (!(command instanceof LiteralCommandNode)) {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"command", "b", "c"}
             ));
             Assertions.assertEquals("command b c", SimpleTestCommand.lastExecuted);
 
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"command", "b", "d", "f"}
             ));
             Assertions.assertEquals("command", SimpleTestCommand.lastExecuted);
 
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"command", "a"}
             ));
             Assertions.assertEquals("command a", SimpleTestCommand.lastExecuted);
 
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"command", ""}
             ));
@@ -160,25 +160,25 @@ class CommandTreeTest {
                 throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
             }
             SimpleTestCommand.lastExecuted = "";
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"command", "b", "c"}
             ));
             Assertions.assertEquals("", SimpleTestCommand.lastExecuted);
 
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"mycommand", "b", "d", "f"}
             ));
             Assertions.assertEquals("command", SimpleTestCommand.lastExecuted);
 
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"mycommand", "a"}
             ));
             Assertions.assertEquals("command a", SimpleTestCommand.lastExecuted);
 
-            command.execute(new ContextBuilder(
+            command.execute(new ContextBuilder(null,
                     mockSender,
                     new String[]{"mycommand", ""}
             ));
@@ -199,15 +199,15 @@ class CommandTreeTest {
         Assertions.assertNotNull(builder);
         CommandNode cmd = builder.build();
 
-        List<Completion> tabArgs = cmd.tabComplete(new ContextBuilder(mockSender, new String[]{"cmd", ""}));
+        List<Completion> tabArgs = cmd.tabComplete(new ContextBuilder(null, mockSender, new String[]{"cmd", ""}));
         Assertions.assertEquals(3, tabArgs.size());
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("a"));
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("b"));
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("c"));
 
-        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd", "text"}));
+        cmd.execute(new ContextBuilder(null, mockSender, new String[]{"cmd", "text"}));
         Assertions.assertEquals("text", ArgumentTestCommand.state);
-        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd"}));
+        cmd.execute(new ContextBuilder(null, mockSender, new String[]{"cmd"}));
         Assertions.assertNull(ArgumentTestCommand.state);
     }
 
@@ -222,16 +222,16 @@ class CommandTreeTest {
         Assertions.assertNotNull(builder);
         CommandNode cmd = builder.build();
 
-        List<Completion> tabArgs = cmd.tabComplete(new ContextBuilder(mockSender, new String[]{"cmd", "a", ""}));
+        List<Completion> tabArgs = cmd.tabComplete(new ContextBuilder(null, mockSender, new String[]{"cmd", "a", ""}));
         Assertions.assertEquals(3, tabArgs.size());
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("d"));
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("e"));
         Assertions.assertTrue(tabArgs.stream().map(Completion::suggestion).toList().contains("f"));
 
-        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd", "text", "abc"}));
-        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd", "text"}));
+        cmd.execute(new ContextBuilder(null, mockSender, new String[]{"cmd", "text", "abc"}));
+        cmd.execute(new ContextBuilder(null, mockSender, new String[]{"cmd", "text"}));
         Assertions.assertEquals("text", ArgumentTestCommand.state);
-        cmd.execute(new ContextBuilder(mockSender, new String[]{"cmd"}));
+        cmd.execute(new ContextBuilder(null, mockSender, new String[]{"cmd"}));
         Assertions.assertNull(ArgumentTestCommand.state);
     }
 }

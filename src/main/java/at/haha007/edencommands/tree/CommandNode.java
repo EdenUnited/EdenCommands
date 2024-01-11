@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.function.Predicate;
 
 public abstract class CommandNode {
 
@@ -55,55 +55,62 @@ public abstract class CommandNode {
     public boolean execute(ContextBuilder context) {
         if (!testRequirement(context.build()))
             return false;
-        if (!context.hasNext()) {
+
+        if (context.hasNext()) {
+            if(executeChildren(context)) return true;
+        } else {
             try {
                 if (executor != null) {
                     executor.execute(context.build());
                     return true;
                 }
             } catch (CommandException e) {
-                if (e.getMessage() != null) {
-                    e.sendErrorMessage(context.sender());
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
+                return handleException(context, e);
+            } catch (Exception e) {
+                context.printTrace(e);
             }
         }
-        for (CommandNode child : children) {
-            if (!context.hasNext())
-                break;
-            if (child.execute(context.next()))
-                return true;
-        }
+
         if (defaultExecutor == null)
             return false;
         try {
             defaultExecutor.execute(context.build());
             return true;
         } catch (CommandException e) {
-            if (e.getMessage() != null)
-                e.sendErrorMessage(context.sender());
-            else
-                return false;
-            return true;
-        } catch (Throwable e) {
-            e.printStackTrace();
+            return handleException(context, e);
+        } catch (Exception e) {
+            context.printTrace(e);
         }
         return false;
     }
 
+    private boolean handleException(ContextBuilder context, CommandException e) {
+        if (e.getMessage() != null) {
+            e.sendErrorMessage(context.sender());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean executeChildren(ContextBuilder context) {
+        for (CommandNode child : children) {
+            if (child.execute(context.next()))
+                return true;
+        }
+        return false;
+    }
+
+    @NotNull
     public List<AsyncTabCompleteEvent.Completion> tabComplete(ContextBuilder context) {
         if (context.hasNext()) {
             return children.stream()
                     .map(c -> c.tabComplete(context.next()))
-                    .filter(Objects::nonNull)
+                    .filter(Predicate.not(List::isEmpty))
                     .flatMap(List::stream)
                     .toList();
         }
-        return null;
+        return List.of();
     }
 
     @Override

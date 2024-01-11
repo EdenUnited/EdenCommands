@@ -8,6 +8,7 @@ import at.haha007.edencommands.argument.ParsedArgument;
 import at.haha007.edencommands.tree.CommandBuilder;
 import at.haha007.edencommands.tree.LiteralCommandNode;
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent.Completion;
+import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,11 +20,12 @@ import java.util.stream.Collectors;
 
 public class AnnotatedCommandLoader {
     private final CommandTree root = CommandTree.root();
-    private final Map<String, TabCompleter> tabCompleters = new HashMap<>();
-    private final Map<String, ArgumentParser> argumentMap = new HashMap<>();
+    private final Map<String, TabCompleter> tabCompleterMap = new HashMap<>();
+    private final Map<String, ArgumentParser<?>> argumentMap = new HashMap<>();
     private final Map<String, Requirement> requirementMap = new HashMap<>();
     private final JavaPlugin plugin;
     private final Map<String, String> literalMapper = new HashMap<>();
+    private static final String FIELD_ACCESS_FAILURE = "Failed to set field accessible!";
 
     public AnnotatedCommandLoader(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -37,35 +39,41 @@ public class AnnotatedCommandLoader {
         literalMapper.put(literal, mappedLiteral);
     }
 
-    public List<CommandBuilder<?>> getCommands() {
-        Map<String, Argument<?>> argumentMap = new HashMap<>();
+    public List<? extends CommandBuilder<?>> getCommands() {
+        Map<String, Argument<?>> arguments = new HashMap<>();
         TabCompleter emptyTabCompleter = context -> List.of();
         this.argumentMap.forEach((key, value) -> {
-            TabCompleter tabCompleter = tabCompleters.getOrDefault(key, emptyTabCompleter);
+            TabCompleter tabCompleter = tabCompleterMap.getOrDefault(key, emptyTabCompleter);
 
             //noinspection rawtypes,unchecked
             Argument<?> argument = new Argument<>(tabCompleter, true) {
                 @Override
                 @NotNull
-                public ParsedArgument parse(CommandContext context) {
-                    return value.apply(context);
+                public ParsedArgument parse(CommandContext context) throws CommandException {
+                    try {
+                        return value.parse(context);
+                    } catch (CommandException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        plugin.getLogger().throwing(getClass().getSimpleName(), "parse", e);
+                        throw new CommandException(Component.text("Failed to parse argument: " + key), context);
+                    }
                 }
             };
-            argumentMap.put(key, argument);
+            arguments.put(key, argument);
         });
 
-
         return root.getChildren().stream()
-                .map(tree -> tree.toCommand(argumentMap, literalMapper, requirementMap))
-                .collect(Collectors.toList());
-
+                .map(tree -> tree.toCommand(arguments, literalMapper, requirementMap))
+                .toList();
     }
 
     public void register(CommandRegistry registry) {
         List<? extends CommandBuilder<?>> commands = getCommands();
         for (CommandBuilder<?> cmd : commands) {
             if (!(cmd instanceof LiteralCommandNode.LiteralCommandBuilder literalCommandBuilder)) {
-                throw new RuntimeException("CommandBuilder is not a LiteralCommandBuilder!");
+                registry.getPlugin().getLogger().warning("Not a LiteralCommandBuilder: " + cmd);
+                continue;
             }
             registry.register(literalCommandBuilder.build());
         }
@@ -107,22 +115,18 @@ public class AnnotatedCommandLoader {
         }
         key = key.trim();
         Class<?> outputType = method.getReturnType();
-        if (!(outputType == ParsedArgument.class)) {
+        if (outputType != ParsedArgument.class) {
             throw new IllegalArgumentException("Method does not return a ParsedArgument!");
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != 1 || parameterTypes[0] != CommandContext.class) {
-            throw new IllegalArgumentException("Method does not take a CommandContext as parameter!");
+            throw new IllegalArgumentException("Method does not take a CommandContext as parameter: " + method.getName());
         }
 
-        method.setAccessible(true);
-        ArgumentParser argument = c -> {
-            try {
-                return (ParsedArgument<?>) method.invoke(obj, c);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        if (!method.trySetAccessible())
+            throw new IllegalArgumentException("Method is not accessible!");
+        //noinspection unchecked
+        ArgumentParser<?> argument = c -> (ParsedArgument<Object>) method.invoke(obj, c);
         argumentMap.put(key, argument);
     }
 
@@ -140,7 +144,8 @@ public class AnnotatedCommandLoader {
             throw new IllegalArgumentException("Argument with key " + key + " already exists!");
         }
         try {
-            field.setAccessible(true);
+            if (!field.trySetAccessible())
+                throw new IllegalArgumentException("Field is not accessible!");
             Object o = field.get(obj);
             if (o == null) {
                 throw new IllegalArgumentException("ArgumentParser field is null!");
@@ -148,10 +153,10 @@ public class AnnotatedCommandLoader {
             if (!field.getType().isInstance(o)) {
                 throw new IllegalArgumentException("ArgumentParser field is not of type ArgumentParser!");
             }
-            ArgumentParser parser = (ArgumentParser) o;
+            ArgumentParser<?> parser = (ArgumentParser<?>) o;
             argumentMap.put(key, parser);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            plugin.getLogger().throwing(getClass().getSimpleName(), "registerArgument", e);
         }
     }
 
@@ -167,30 +172,29 @@ public class AnnotatedCommandLoader {
         }
         key = key.trim();
         Class<?> outputType = method.getReturnType();
-        if (!(outputType == List.class)) {
+        if (outputType != List.class) {
             throw new IllegalArgumentException("Method does not return a List<AsyncTabCompleteEvent.Completion>!");
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != 1 || parameterTypes[0] != CommandContext.class) {
             throw new IllegalArgumentException("Method does not take a CommandContext as parameter!");
         }
-
-        method.setAccessible(true);
-        TabCompleter tabCompleter;
+        if (!method.trySetAccessible())
+            throw new IllegalArgumentException("Method is not accessible!");
         try {
-            tabCompleter = (context) -> {
+            TabCompleter tabCompleter = context -> {
                 try {
                     //noinspection unchecked
                     return (List<Completion>) method.invoke(obj, context);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    plugin.getLogger().throwing(getClass().getSimpleName(), "registerTabCompleter", e);
                     return List.of();
                 }
             };
+            tabCompleterMap.put(key, tabCompleter);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Method does not return a List<AsyncTabCompleteEvent.Completion!");
         }
-        tabCompleters.put(key, tabCompleter);
     }
 
     private void registerTabCompleter(Field field, Object obj) {
@@ -204,8 +208,8 @@ public class AnnotatedCommandLoader {
             return;
         }
         key = key.trim();
-        field.setAccessible(true);
-        TabCompleter tabCompleter;
+        if (!field.trySetAccessible())
+            throw new IllegalArgumentException(FIELD_ACCESS_FAILURE);
         try {
             Object o = field.get(obj);
             if (o == null) {
@@ -214,11 +218,10 @@ public class AnnotatedCommandLoader {
             if (!field.getType().isInstance(o)) {
                 throw new IllegalArgumentException("TabCompleter field is not of type TabCompleter!");
             }
-            tabCompleter = (TabCompleter) o;
+            tabCompleterMap.put(key, (TabCompleter) o);
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException("Field is not accessible!");
         }
-        tabCompleters.put(key, tabCompleter);
     }
 
     private void registerRequirement(Method method, Object obj) {
@@ -240,13 +243,15 @@ public class AnnotatedCommandLoader {
             throw new IllegalArgumentException("Method does not take a CommandContext as parameter!");
         }
 
-        method.setAccessible(true);
+        if (!method.trySetAccessible())
+            throw new IllegalArgumentException("Failed to set method accessible!");
         Requirement requirement;
         requirement = c -> {
             try {
                 return (boolean) method.invoke(obj, c);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+                plugin.getLogger().throwing(getClass().getSimpleName(), "registerRequirement", e);
+                return false;
             }
         };
 
@@ -263,16 +268,18 @@ public class AnnotatedCommandLoader {
             return;
         }
         key = key.trim();
-        if (!(field.getType() == Requirement.class)) {
+        if (field.getType() != Requirement.class) {
             throw new IllegalArgumentException("Field is not a Requirement");
         }
 
-        field.setAccessible(true);
+        if (!field.trySetAccessible())
+            throw new IllegalArgumentException(FIELD_ACCESS_FAILURE);
         Requirement requirement;
         try {
             requirement = (Requirement) field.get(obj);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            plugin.getLogger().throwing(getClass().getSimpleName(), "registerRequirement", e);
+            return;
         }
 
         requirementMap.put(key, requirement);
@@ -288,7 +295,8 @@ public class AnnotatedCommandLoader {
         list = new LinkedList<>(list);
         list.add(0, "root");
         boolean sync = getAnnotationSync(method);
-        method.setAccessible(true);
+        if (!method.trySetAccessible())
+            throw new IllegalArgumentException("Failed to set method accessible!");
         CommandExecutor executor = new MethodCommandExecutor(obj, method);
         if (sync) executor = new SyncCommandExecutor(executor, plugin);
 
@@ -307,7 +315,8 @@ public class AnnotatedCommandLoader {
         List<String> list = Arrays.stream(command.trim().split("\\s+")).toList();
 
         boolean sync = getAnnotationSync(field);
-        field.setAccessible(true);
+        if (!field.trySetAccessible())
+            throw new IllegalArgumentException(FIELD_ACCESS_FAILURE);
 
         Object o;
         try {
@@ -346,7 +355,7 @@ public class AnnotatedCommandLoader {
         try {
             addAnnotated(method, obj);
         } catch (IllegalArgumentException ignored) {
-            System.err.println("Failed to add method " + method.getName() + " to command tree!");
+            plugin.getLogger().severe("Failed to add method " + method.getName() + " to command tree!");
         }
     }
 
@@ -354,7 +363,7 @@ public class AnnotatedCommandLoader {
         try {
             addAnnotated(field, obj);
         } catch (IllegalArgumentException ignored) {
-            System.err.println("Failed to add method " + field.getName() + " to command tree!");
+            plugin.getLogger().severe("Failed to add field " + field.getName() + " to command tree!");
         }
     }
 
@@ -369,13 +378,14 @@ public class AnnotatedCommandLoader {
     }
 
     private String getCommandAnnotationValue(Method method) {
-        String root = Optional.ofNullable(method.getDeclaringClass().getDeclaredAnnotation(CommandList.class))
+        String commandString = Optional.ofNullable(method.getDeclaringClass().getDeclaredAnnotation(CommandList.class))
                 .map(CommandList::value).stream()
                 .flatMap(Arrays::stream)
                 .map(Command::value)
                 .collect(Collectors.joining(" "));
-        if (root.isBlank()) root = Optional.ofNullable(method.getDeclaringClass().getDeclaredAnnotation(Command.class))
-                .map(Command::value).orElse("");
+        if (commandString.isBlank())
+            commandString = Optional.ofNullable(method.getDeclaringClass().getDeclaredAnnotation(Command.class))
+                    .map(Command::value).orElse("");
         String sub = Optional.ofNullable(method.getDeclaredAnnotation(CommandList.class))
                 .map(CommandList::value).stream()
                 .flatMap(Arrays::stream)
@@ -384,17 +394,18 @@ public class AnnotatedCommandLoader {
         if (sub.isBlank()) sub = Optional.ofNullable(method.getDeclaredAnnotation(Command.class))
                 .map(Command::value).orElse("");
         if (sub.isBlank()) return null;
-        return root + " " + sub;
+        return commandString + " " + sub;
     }
 
     private String getCommandAnnotationValue(Field field) {
-        String root = Optional.ofNullable(field.getDeclaringClass().getDeclaredAnnotation(CommandList.class))
+        String commandString = Optional.ofNullable(field.getDeclaringClass().getDeclaredAnnotation(CommandList.class))
                 .map(CommandList::value).stream()
                 .flatMap(Arrays::stream)
                 .map(Command::value)
                 .collect(Collectors.joining(" "));
-        if (root.isBlank()) root = Optional.ofNullable(field.getDeclaringClass().getDeclaredAnnotation(Command.class))
-                .map(Command::value).orElse("");
+        if (commandString.isBlank())
+            commandString = Optional.ofNullable(field.getDeclaringClass().getDeclaredAnnotation(Command.class))
+                    .map(Command::value).orElse("");
         String sub = Optional.ofNullable(field.getDeclaredAnnotation(CommandList.class))
                 .map(CommandList::value).stream()
                 .flatMap(Arrays::stream)
@@ -403,14 +414,14 @@ public class AnnotatedCommandLoader {
         if (sub.isBlank()) sub = Optional.ofNullable(field.getDeclaredAnnotation(Command.class))
                 .map(Command::value).orElse("");
         if (sub.isBlank()) return null;
-        return root + " " + sub;
+        return commandString + " " + sub;
     }
 
     @Override
     public String toString() {
         return "AnnotatedCommandLoader{" +
                 "root=" + root +
-                ", tabCompleters=" + tabCompleters +
+                ", tabCompleters=" + tabCompleterMap +
                 ", argumentMap=" + argumentMap +
                 ", requirementMap=" + requirementMap +
                 ", plugin=" + plugin +

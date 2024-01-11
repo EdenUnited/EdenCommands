@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class LiteralCommandNode extends CommandNode {
     @NotNull
@@ -39,7 +38,8 @@ public final class LiteralCommandNode extends CommandNode {
         this.ignoreCase = ignoreCase;
     }
 
-    public List<AsyncTabCompleteEvent.Completion> tabComplete(ContextBuilder context) {
+    @Override
+    public @NotNull List<AsyncTabCompleteEvent.Completion> tabComplete(ContextBuilder context) {
         if (!testRequirement(context.build()))
             return List.of();
         if (context.hasNext() && ignoreCase && literal.equalsIgnoreCase(context.current())) {
@@ -54,6 +54,7 @@ public final class LiteralCommandNode extends CommandNode {
         return List.of();
     }
 
+    @Override
     public boolean execute(ContextBuilder context) {
         if (ignoreCase && !context.current().equalsIgnoreCase(literal))
             return false;
@@ -66,11 +67,13 @@ public final class LiteralCommandNode extends CommandNode {
         return literal.toLowerCase().startsWith(start.toLowerCase());
     }
 
-    public @NotNull String literal() {
+    @NotNull
+    public String literal() {
         return this.literal;
     }
 
-    public @Nullable Component tooltip() {
+    @Nullable
+    public Component tooltip() {
         return this.tooltip;
     }
 
@@ -99,9 +102,8 @@ public final class LiteralCommandNode extends CommandNode {
         /**
          * @return a clone of this instance
          */
-        @SuppressWarnings("MethodDoesntCallSuperMethod")
         @NotNull
-        public LiteralCommandBuilder clone() {
+        public LiteralCommandBuilder copy() {
             LiteralCommandBuilder clone = new LiteralCommandBuilder(literal);
             clone.requirements.addAll(requirements);
             clone.children.addAll(children);
@@ -179,7 +181,7 @@ public final class LiteralCommandNode extends CommandNode {
             Requirement req = requirements.stream().reduce(Requirement::and).orElseGet(Requirement::alwaysTrue);
             return new LiteralCommandNode(literal,
                     tooltip,
-                    children.stream().map(CommandBuilder::build).collect(Collectors.toList()),
+                    children.stream().map(CommandBuilder::build).toList(),
                     executor,
                     req,
                     defaultExecutor,

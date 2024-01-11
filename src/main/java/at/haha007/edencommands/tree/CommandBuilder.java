@@ -42,7 +42,7 @@ public interface CommandBuilder<T extends CommandBuilder<T>> {
      * @return a clone of the builder
      */
     @NotNull
-    T clone();
+    T copy();
 
     /**
      * @return a new @{@link CommandNode}

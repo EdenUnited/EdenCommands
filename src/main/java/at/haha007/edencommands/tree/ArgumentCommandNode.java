@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class ArgumentCommandNode<T> extends CommandNode {
     @NotNull
@@ -37,6 +36,8 @@ public final class ArgumentCommandNode<T> extends CommandNode {
         this.argument = argument;
     }
 
+    @Override
+    @NotNull
     public List<AsyncTabCompleteEvent.Completion> tabComplete(ContextBuilder context) {
         if (!testRequirement(context.build()))
             return List.of();
@@ -53,6 +54,7 @@ public final class ArgumentCommandNode<T> extends CommandNode {
         }
     }
 
+    @Override
     public boolean execute(ContextBuilder context) {
         if (!testRequirement(context.build()))
             return false;
@@ -97,9 +99,8 @@ public final class ArgumentCommandNode<T> extends CommandNode {
         /**
          * @return a clone of this instance
          */
-        @SuppressWarnings("MethodDoesntCallSuperMethod")
         @NotNull
-        public ArgumentCommandBuilder<T> clone() {
+        public ArgumentCommandBuilder<T> copy() {
             ArgumentCommandBuilder<T> clone = new ArgumentCommandBuilder<>(argument, key);
             clone.children.addAll(children);
             clone.requirements.addAll(requirements);
@@ -163,7 +164,7 @@ public final class ArgumentCommandNode<T> extends CommandNode {
                     defaultExecutor,
                     requirement,
                     executor,
-                    children.stream().map(CommandBuilder::build).collect(Collectors.toList()));
+                    children.stream().map(CommandBuilder::build).toList());
         }
     }
 }

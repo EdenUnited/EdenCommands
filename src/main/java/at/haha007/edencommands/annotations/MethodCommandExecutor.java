@@ -4,6 +4,7 @@ import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandExecutor;
 import net.kyori.adventure.text.Component;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,11 +20,12 @@ class MethodCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(CommandContext context) throws CommandException {
-        method.setAccessible(true);
         try {
+            if(!method.trySetAccessible())
+                throw new CommandException(Component.text("Failed to execute command! Method couldn't be invoked!"), context);
             method.invoke(obj, context);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+            LoggerFactory.getLogger(this.getClass()).error("Failed to execute command!", e);
             throw new CommandException(Component.text("Failed to execute command! Method couldn't be invoked!"), context);
         }
     }

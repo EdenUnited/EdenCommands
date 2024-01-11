@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class Completion<T> {
     @NotNull
-    private final T completion;
+    private final T value;
     @Nullable
     private final Component tooltip;
 
@@ -29,12 +29,12 @@ public class Completion<T> {
      * @param tooltip The tooltip to show when hovering over the tab-completion
      */
     public Completion(@NotNull T completion, @Nullable Component tooltip) {
-        this.completion = completion;
+        this.value = completion;
         this.tooltip = tooltip;
     }
 
     public @NotNull T completion() {
-        return this.completion;
+        return this.value;
     }
 
     public @Nullable Component tooltip() {

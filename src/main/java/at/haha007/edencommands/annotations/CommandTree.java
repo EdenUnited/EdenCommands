@@ -39,9 +39,9 @@ class CommandTree {
     }
 
     public boolean add(@NotNull List<String> cmd, @Nullable String requirement, @NotNull CommandExecutor executor, boolean isDefault) {
-        String key = cmd.get(0);
+        String cmdKey = cmd.get(0);
         List<String> rest = cmd.subList(1, cmd.size());
-        if (!key.equals(this.key) ) return false;
+        if (!cmdKey.equals(this.key)) return false;
         if (rest.isEmpty()) {
             if (isDefault)
                 this.defaultExecutor = executor;
@@ -53,8 +53,8 @@ class CommandTree {
         for (CommandTree child : children) {
             if (child.add(rest, requirement, executor, isDefault)) return true;
         }
-        key = rest.get(0);
-        CommandTree child = new CommandTree(key);
+        cmdKey = rest.get(0);
+        CommandTree child = new CommandTree(cmdKey);
         children.add(child);
         child.add(rest, requirement, executor, isDefault);
         return true;
@@ -74,8 +74,8 @@ class CommandTree {
         }
         if (executor != null) cmd.executor(executor);
         if (defaultExecutor != null) cmd.defaultExecutor(defaultExecutor);
-        Requirement requirement = calculateRequirement(requirements);
-        if (requirement != null) cmd.requires(requirement);
+        Requirement calculatedRequirement = calculateRequirement(requirements);
+        if (calculatedRequirement != null) cmd.requires(calculatedRequirement);
 
         for (CommandTree child : children) {
             cmd.then(child.toCommand(argumentMap, literalMapper, requirements));
@@ -96,16 +96,16 @@ class CommandTree {
 
         if (childRequirement == null) {
             if (requirement == null) return null;
-            Requirement requirement = requirements.get(this.requirement);
-            if (requirement == null) throw new IllegalArgumentException("Unknown requirement: " + this.requirement);
-            return requirement;
+            Requirement readRequirement = requirements.get(this.requirement);
+            if (readRequirement == null) throw new IllegalArgumentException("Unknown readRequirement: " + this.requirement);
+            return readRequirement;
         }
 
         if (requirement == null) return childRequirement;
 
-        Requirement requirement = requirements.get(this.requirement);
-        if (requirement == null) throw new IllegalArgumentException("Unknown requirement: " + this.requirement);
-        return childRequirement.and(requirement);
+        Requirement readRequirement = requirements.get(this.requirement);
+        if (readRequirement == null) throw new IllegalArgumentException("Unknown readRequirement: " + this.requirement);
+        return childRequirement.and(readRequirement);
     }
 
     @Override

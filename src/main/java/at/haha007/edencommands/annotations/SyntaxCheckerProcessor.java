@@ -2,6 +2,7 @@ package at.haha007.edencommands.annotations;
 
 import at.haha007.edencommands.annotations.annotations.*;
 import com.google.auto.service.AutoService;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -18,7 +19,10 @@ import java.util.Set;
 @AutoService(javax.annotation.processing.Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @SupportedAnnotationTypes("at.haha007.edencommands.annotations.annotations.Command")
-public class SntaxCheckerProcessor extends AbstractProcessor {
+public class SyntaxCheckerProcessor extends AbstractProcessor {
+    private static final String COMMAND_CONTEXT_CLASS_PATH = "at.haha007.edencommands.CommandContext";
+    private static final String WHITESPACE_REGEX = ".*\\s.*";
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         roundEnv.getElementsAnnotatedWith(Command.class).forEach(this::checkCommandAnnotation);
@@ -46,7 +50,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
             tree.add(List.of(value), null, c -> {
             }, false);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggerFactory.getLogger(getClass()).error("Command annotation value has invalid syntax", e);
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Command annotation value has invalid syntax", element);
             return;
         }
@@ -65,7 +69,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "CommandExecutors have to have only CommandContext as parameter", element);
             return;
         }
-        if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
+        if (!method.getParameters().get(0).asType().toString().equals(COMMAND_CONTEXT_CLASS_PATH)) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "CommandExecutors have to have only CommandContext as parameter", element);
         }
     }
@@ -79,7 +83,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key cannot be empty", element);
             return;
         }
-        if (command.value().matches(".*\\s.*")) {
+        if (command.value().matches(WHITESPACE_REGEX)) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key must not contain whitespace", element);
             return;
         }
@@ -88,8 +92,8 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
         if (element.getKind() == ElementKind.FIELD) {
             VariableElement field = (VariableElement) element;
             ReferenceType type = (ReferenceType) field.asType();
-            if (!type.toString().equals("at.haha007.edencommands.annotations.annotations.ArgumentParser")) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments has to be ArgumentParser but is " + type, element);
+            if (!type.toString().startsWith("at.haha007.edencommands.annotations.annotations.ArgumentParser")) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument has to be ArgumentParser but is " + type, element);
                 return;
             }
         }
@@ -98,16 +102,16 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
             String returnType = method.getReturnType().toString();
             returnType = returnType.substring(0, returnType.indexOf("<"));
 
-            if (!returnType.equals("at.haha007.edencommands.argument.ParsedArgument")) {
+            if (!returnType.startsWith("at.haha007.edencommands.argument.ParsedArgument")) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments have to return ParsedArgument but is returning " + method.getReturnType().toString(), element);
                 return;
             }
             if (method.getParameters().size() != 1) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have only CommandContext as parameter", element);
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Too many method parameters. Arguments must have only CommandContext as parameter", element);
                 return;
             }
-            if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have to have only CommandContext as parameter", element);
+            if (!method.getParameters().get(0).asType().toString().equals(COMMAND_CONTEXT_CLASS_PATH)) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Wrong method parameter. Arguments must have to have only CommandContext as parameter", element);
             }
         }
     }
@@ -121,7 +125,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "TabCompleter key cannot be empty", element);
             return;
         }
-        if (command.value().matches(".*\\s.*")) {
+        if (command.value().matches(WHITESPACE_REGEX)) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "TabCompleter key must not contain whitespace", element);
             return;
         }
@@ -147,7 +151,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have only CommandContext as parameter", element);
                 return;
             }
-            if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
+            if (!method.getParameters().get(0).asType().toString().equals(COMMAND_CONTEXT_CLASS_PATH)) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have to have only CommandContext as parameter", element);
             }
         }
@@ -162,7 +166,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key cannot be empty", element);
             return;
         }
-        if (annotation.value().matches(".*\\s.*")) {
+        if (annotation.value().matches(WHITESPACE_REGEX)) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Argument key must not contain whitespace", element);
             return;
         }
@@ -194,7 +198,7 @@ public class SntaxCheckerProcessor extends AbstractProcessor {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have only CommandContext as parameter", element);
                 return;
             }
-            if (!method.getParameters().get(0).asType().toString().equals("at.haha007.edencommands.CommandContext")) {
+            if (!method.getParameters().get(0).asType().toString().equals(COMMAND_CONTEXT_CLASS_PATH)) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Arguments must have to have only CommandContext as parameter", element);
             }
         }

@@ -4,26 +4,30 @@ import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandContext.Parameter;
 import at.haha007.edencommands.argument.ParsedArgument;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ContextBuilder {
+    private final JavaPlugin plugin;
     private final CommandSender sender;
     private final String[] input;
     private final int stackPointer;
     private final Map<String, Parameter<?>> parsedArguments;
 
-    private ContextBuilder(CommandSender sender, String[] input, int stackPointer, Map<String, CommandContext.Parameter<?>> parsedArguments) {
+    private ContextBuilder(JavaPlugin plugin, CommandSender sender, String[] input, int stackPointer, Map<String, CommandContext.Parameter<?>> parsedArguments) {
+        this.plugin = plugin;
         this.sender = sender;
         this.input = input;
         this.stackPointer = stackPointer;
         this.parsedArguments = parsedArguments;
     }
 
-    public ContextBuilder(CommandSender sender, String[] input) {
-        this(sender, input, 0, new LinkedHashMap<>());
+    public ContextBuilder(JavaPlugin plugin, CommandSender sender, String[] input) {
+        this(plugin, sender, input, 0, new LinkedHashMap<>());
     }
 
     public String current() {
@@ -31,11 +35,11 @@ public class ContextBuilder {
     }
 
     public ContextBuilder next() {
-        return new ContextBuilder(sender, input, stackPointer + 1, parsedArguments);
+        return new ContextBuilder(plugin, sender, input, stackPointer + 1, parsedArguments);
     }
 
     public ContextBuilder next(int pointerIncrements) {
-        return new ContextBuilder(sender, input, stackPointer + pointerIncrements, parsedArguments);
+        return new ContextBuilder(plugin,sender, input, stackPointer + pointerIncrements, parsedArguments);
     }
 
     public boolean hasNext() {
@@ -55,10 +59,19 @@ public class ContextBuilder {
         return this.sender;
     }
 
+    public void printTrace(Exception e) {
+        if(plugin == null){
+            Logger.getLogger("EdenCommands").throwing("", "", e);
+        }else{
+            plugin.getLogger().throwing("", "", e);
+        }
+    }
+
     @Override
     public String toString() {
         return "ContextBuilder{" +
-                "sender=" + sender +
+                "plugin=" + plugin +
+                ", sender=" + sender +
                 ", input=" + Arrays.toString(input) +
                 ", stackPointer=" + stackPointer +
                 ", parsedArguments=" + parsedArguments +

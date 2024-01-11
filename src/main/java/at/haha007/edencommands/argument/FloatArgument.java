@@ -218,18 +218,9 @@ public class FloatArgument extends Argument<Float> {
         }
 
         public FloatArgument build() {
-            List<Filter<Float>> filters = switch (this.filters == null ? 0 : this.filters.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.filters.get(0));
-                default -> List.copyOf(this.filters);
-            };
-            List<Completion<Float>> completions = switch (this.completions == null ? 0 : this.completions.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.completions.get(0));
-                default -> List.copyOf(this.completions);
-            };
-
-            return new FloatArgument(filters, notFloatMessage, completions, filterByName);
+            List<Filter<Float>> filterList = filters == null ? Collections.emptyList() : List.copyOf(filters);
+            List<Completion<Float>> completionList = completions == null ? Collections.emptyList() : List.copyOf(completions);
+            return new FloatArgument(filterList, notFloatMessage, completionList, filterByName);
         }
 
         public String toString() {

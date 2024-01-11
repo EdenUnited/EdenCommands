@@ -218,18 +218,9 @@ public class DoubleArgument extends Argument<Double> {
         }
 
         public DoubleArgument build() {
-            List<Filter<Double>> filters = switch (this.filters == null ? 0 : this.filters.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.filters.get(0));
-                default -> List.copyOf(this.filters);
-            };
-            List<Completion<Double>> completions = switch (this.completions == null ? 0 : this.completions.size()) {
-                case 0 -> Collections.emptyList();
-                case 1 -> Collections.singletonList(this.completions.get(0));
-                default -> List.copyOf(this.completions);
-            };
-
-            return new DoubleArgument(filters, notDoubleMessage, completions, filterByName);
+            List<Filter<Double>> filterList = filters == null ? List.of() : List.copyOf(this.filters);
+            List<Completion<Double>> completionList = completions == null ? List.of() : List.copyOf(this.completions);
+            return new DoubleArgument(filterList, notDoubleMessage, completionList, filterByName);
         }
 
         public String toString() {
