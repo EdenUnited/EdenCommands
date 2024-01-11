@@ -13,15 +13,15 @@ import org.mockito.Mockito;
 import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class CommandNodeTest {
+class CommandNodeTest {
     private final CommandSender sender = Mockito.mock(CommandSender.class);
 
     @Test
     void tabLiteral() {
         LiteralCommandNode node = LiteralCommandNode.builder("test").then(LiteralCommandNode.builder("arg")).build();
         List<AsyncTabCompleteEvent.Completion> completes = node.tabComplete(new ContextBuilder(sender, new String[]{"test", ""}));
-        Assertions.assertEquals(completes.size(), 1);
-        Assertions.assertEquals(completes.get(0).suggestion(), "arg");
+        Assertions.assertEquals(1, completes.size());
+        Assertions.assertEquals("arg", completes.get(0).suggestion());
     }
 
     @Test
